@@ -1,0 +1,10 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="VideoHostingByWhoami.Views.PlayerWindow"
+        Title="Player"
+        Width="640" Height="360">
+    <Grid>
+        <TextBlock Text="Видеоплеер будет здесь"
+                   VerticalAlignment="Center" HorizontalAlignment="Center"/>
+    </Grid>
+</Window>
