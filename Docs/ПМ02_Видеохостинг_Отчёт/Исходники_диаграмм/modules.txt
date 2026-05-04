@@ -1,0 +1,48 @@
+@startuml
+skinparam componentStyle rectangle
+' Вертикальное расположение
+top to bottom direction
+
+actor "Пользователь" as User
+
+package "Клиент (Avalonia)" {
+  [UI: каталог/плеер/загрузка] as UI
+  [Модуль авторизации] as Auth
+}
+
+package "Сервер (ASP.NET Core)" {
+  [API контроллеры] as API
+  [Модуль видео] as Video
+  [Модуль комментариев] as Comment
+  [Модуль лайков] as Like
+  [Модуль плейлистов] as Playlist
+  [Модуль перевода] as Translate
+  [Модуль модерации] as Moderation
+  [Модуль уведомлений] as Notify
+  [Модуль статистики] as Stats
+  [Модуль донатов] as Donate
+}
+
+database "PostgreSQL" as DB
+
+' Связи (вертикальные)
+User --> UI
+UI --> API
+Auth --> API
+
+API --> DB
+API --> Video
+API --> Comment
+API --> Like
+API --> Playlist
+API --> Translate
+API --> Moderation
+API --> Notify
+API --> Stats
+API --> Donate
+
+Moderation --> Notify
+Video --> Stats
+Like --> Stats
+Donate --> Notify
+@enduml

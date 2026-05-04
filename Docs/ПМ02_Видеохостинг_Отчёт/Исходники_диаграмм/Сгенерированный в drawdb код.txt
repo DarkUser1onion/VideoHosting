@@ -1,0 +1,98 @@
+CREATE TABLE IF NOT EXISTS "users" (
+	"id" UUID NOT NULL DEFAULT gen_random_uuild(),
+	"login" VARCHAR(255) NOT NULL UNIQUE,
+	"password_hash" VARCHAR(255) NOT NULL,
+	"role" VARCHAR(255) NOT NULL,
+	"created_at" TIMESTAMP NOT NULL DEFAULT now(),
+	PRIMARY KEY("id")
+);
+
+
+
+
+CREATE TABLE IF NOT EXISTS "videos" (
+	"id" UUID NOT NULL DEFAULT gen_random_uuid(),
+	"author_id" UUID NOT NULL,
+	"title" VARCHAR(255) NOT NULL,
+	"description" TEXT NOT NULL,
+	"category" VARCHAR(255) NOT NULL,
+	"tags" TEXT ARRAY NOT NULL,
+	"file_path" VARCHAR(255) NOT NULL,
+	"duration" INTEGER NOT NULL,
+	"views" INTEGER NOT NULL DEFAULT 0,
+	"status" VARCHAR(255) NOT NULL,
+	"uploaded_at" TIMESTAMP NOT NULL DEFAULT now(),
+	PRIMARY KEY("id")
+);
+
+
+
+
+CREATE TABLE IF NOT EXISTS "comments" (
+	"id" UUID NOT NULL DEFAULT gen_random_uuid(),
+	"video_id" UUID NOT NULL,
+	"user_id" UUID NOT NULL,
+	"content" TEXT NOT NULL,
+	"created_at" TIMESTAMP NOT NULL DEFAULT now(),
+	PRIMARY KEY("id")
+);
+
+
+
+
+CREATE TABLE IF NOT EXISTS "likes" (
+	"id" UUID NOT NULL DEFAULT gen_random_uuid(),
+	"video_id" UUID NOT NULL,
+	"user_id" UUID NOT NULL,
+	"is_like" BOOLEAN NOT NULL,
+	PRIMARY KEY("id")
+);
+
+
+
+
+CREATE TABLE IF NOT EXISTS "playlists" (
+	"id" UUID NOT NULL DEFAULT gen_random_uuid(),
+	"user_id" UUID,
+	"name" VARCHAR(255),
+	"created_at" TIMESTAMP DEFAULT now(),
+	PRIMARY KEY("id")
+);
+
+
+
+
+CREATE TABLE IF NOT EXISTS "playlist_videos" (
+	"id" UUID NOT NULL,
+	"playlist_id" UUID NOT NULL,
+	"video_id" UUID NOT NULL,
+	"order" INTEGER NOT NULL,
+	PRIMARY KEY("id")
+);
+
+
+
+ALTER TABLE "videos"
+ADD FOREIGN KEY("author_id") REFERENCES "users"("id")
+ON UPDATE NO ACTION ON DELETE NO ACTION;
+ALTER TABLE "comments"
+ADD FOREIGN KEY("video_id") REFERENCES "videos"("id")
+ON UPDATE NO ACTION ON DELETE NO ACTION;
+ALTER TABLE "comments"
+ADD FOREIGN KEY("user_id") REFERENCES "users"("id")
+ON UPDATE NO ACTION ON DELETE NO ACTION;
+ALTER TABLE "likes"
+ADD FOREIGN KEY("video_id") REFERENCES "videos"("id")
+ON UPDATE NO ACTION ON DELETE NO ACTION;
+ALTER TABLE "likes"
+ADD FOREIGN KEY("user_id") REFERENCES "users"("id")
+ON UPDATE NO ACTION ON DELETE NO ACTION;
+ALTER TABLE "playlists"
+ADD FOREIGN KEY("user_id") REFERENCES "users"("id")
+ON UPDATE NO ACTION ON DELETE NO ACTION;
+ALTER TABLE "playlist_videos"
+ADD FOREIGN KEY("playlist_id") REFERENCES "playlists"("id")
+ON UPDATE NO ACTION ON DELETE NO ACTION;
+ALTER TABLE "playlist_videos"
+ADD FOREIGN KEY("video_id") REFERENCES "videos"("id")
+ON UPDATE NO ACTION ON DELETE NO ACTION;

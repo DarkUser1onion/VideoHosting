@@ -1,0 +1,86 @@
+@startuml
+class User {
+  + UUID id
+  + string login
+  + string password_hash
+  + string role
+  + datetime created_at
+  + register()
+  + login()
+  + editProfile()
+  + uploadVideo()
+  + comment()
+  + like()
+  + createPlaylist()
+}
+
+class Video {
+  + UUID id
+  + UUID author_id
+  + string title
+  + text description
+  + string category
+  + list tags
+  + string file_path
+  + int duration
+  + int views
+  + string status
+  + datetime uploaded_at
+  + upload()
+  + edit()
+  + delete()
+  + publish()
+  + view()
+}
+
+class Comment {
+  + UUID id
+  + UUID video_id
+  + UUID user_id
+  + text content
+  + datetime created_at
+  + add()
+  + edit()
+  + delete()
+}
+
+class Like {
+  + UUID id
+  + UUID video_id
+  + UUID user_id
+  + boolean is_like
+  + setLike()
+  + setDislike()
+  + remove()
+}
+
+class Playlist {
+  + UUID id
+  + UUID user_id
+  + string name
+  + datetime created_at
+  + create()
+  + addVideo()
+  + removeVideo()
+  + delete()
+}
+
+class Moderation {
+  + UUID video_id
+  + UUID moderator_id
+  + string status
+  + string reason
+  + datetime moderated_at
+  + approve()
+  + reject()
+}
+
+User "1" -- "0..*" Video : uploads
+User "1" -- "0..*" Comment : writes
+User "1" -- "0..*" Like : gives
+User "1" -- "0..*" Playlist : creates
+Video "1" -- "0..*" Comment : has
+Video "1" -- "0..*" Like : receives
+Video "1" -- "0..1" Moderation : is moderated by
+Playlist "*" -- "*" Video : contains
+@enduml

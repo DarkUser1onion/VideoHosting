@@ -1,0 +1,17 @@
+@startuml
+entity User
+entity Video
+entity Comment
+entity Like
+entity Playlist
+entity Moderation
+
+User ||--o{ Video : creates
+User ||--o{ Comment : writes
+User ||--o{ Like : gives
+User ||--o{ Playlist : creates
+Video ||--o{ Comment : contains
+Video ||--o{ Like : receives
+Video o--|| Moderation : undergoes
+Playlist }o--o{ Video : contains
+@enduml
