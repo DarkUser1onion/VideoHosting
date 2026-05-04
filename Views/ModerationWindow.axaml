@@ -1,0 +1,96 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:VideoHostingByWhoami.Model"
+        x:Class="VideoHostingByWhoami.Views.ModerationWindow"
+        x:DataType="vm:ModerationViewModel"
+        x:Name="ModerationWnd"
+        Title="Модерация видео"
+        Width="1000" Height="700"
+        WindowStartupLocation="CenterOwner"
+        Background="#030712">
+
+    <Window.Styles>
+        <Style Selector="TextBox">
+            <Setter Property="Background" Value="#1F2937"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="#374151"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="12,8"/>
+        </Style>
+        <Style Selector="Button">
+            <Setter Property="Background" Value="#3B82F6"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="16,8"/>
+        </Style>
+        <Style Selector="Button.secondary">
+            <Setter Property="Background" Value="#374151"/>
+        </Style>
+        <Style Selector="Button.approve">
+            <Setter Property="Background" Value="#10B981"/>
+        </Style>
+        <Style Selector="Button.reject">
+            <Setter Property="Background" Value="#EF4444"/>
+        </Style>
+        <Style Selector="TextBlock">
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+        <Style Selector="Border.card">
+            <Setter Property="Background" Value="#1F2937"/>
+            <Setter Property="CornerRadius" Value="12"/>
+        </Style>
+    </Window.Styles>
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        
+        <TextBlock Grid.Row="0" Text="Видео на модерации" FontSize="24" FontWeight="Bold" Margin="0,0,0,20"/>
+        
+        <ScrollViewer Grid.Row="1">
+            <ItemsControl ItemsSource="{Binding PendingVideos}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="vm:VideoItem">
+                        <Border Classes="card" Margin="0,0,0,16" Padding="16">
+                            <Grid ColumnDefinitions="200,*">
+                                <!-- Preview -->
+                                <Border Grid.Column="0" Background="#374151" CornerRadius="8" Height="120">
+                                    <Image Source="{Binding PreviewUrl}" Stretch="UniformToFill"/>
+                                </Border>
+                                
+                                <!-- Info -->
+                                <Grid Grid.Column="1" RowDefinitions="*,Auto" Margin="16,0,0,0">
+                                    <StackPanel Grid.Row="0">
+                                        <TextBlock Text="{Binding Title}" FontSize="18" FontWeight="SemiBold"/>
+                                        <TextBlock Text="{Binding AuthorName}" Foreground="#9CA3AF" Margin="0,4,0,0"/>
+                                        <TextBlock Text="{Binding Description}" TextWrapping="Wrap" 
+                                                   MaxLines="2" Foreground="#9CA3AF" Margin="0,8,0,0"/>
+                                        
+                                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                            <TextBlock Text="Категория:" Foreground="#6B7280" Margin="0,0,8,0"/>
+                                            <TextBlock Text="{Binding Category}"/>
+                                        </StackPanel>
+                                        
+                                        <TextBlock Text="{Binding Status}" Foreground="#F59E0B" Margin="0,4,0,0"/>
+                                    </StackPanel>
+                                    
+                                    <!-- Actions -->
+                                    <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="12" Margin="0,12,0,0">
+                                        <Button Classes="approve" Content="✓ Одобрить"
+                                                Command="{Binding $parent[Window].DataContext.ApproveCommand}"
+                                                CommandParameter="{Binding Id}"/>
+                                        <Button Classes="reject" Content="✕ Отклонить"
+                                                Command="{Binding $parent[Window].DataContext.RejectCommand}"
+                                                CommandParameter="{Binding Id}"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+    </Grid>
+</Window>

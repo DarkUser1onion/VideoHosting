@@ -1,0 +1,52 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:VideoHostingByWhoami.Model"
+        x:Class="VideoHostingByWhoami.Views.NotificationsWindow"
+        x:DataType="vm:NotificationsViewModel"
+        Title="Уведомления"
+        Width="500" Height="600"
+        WindowStartupLocation="CenterOwner"
+        Background="#030712">
+
+    <Window.Styles>
+        <Style Selector="TextBlock">
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+        <Style Selector="Border.card">
+            <Setter Property="Background" Value="#1F2937"/>
+            <Setter Property="CornerRadius" Value="12"/>
+        </Style>
+    </Window.Styles>
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        
+        <TextBlock Grid.Row="0" Text="Уведомления" FontSize="24" FontWeight="Bold" Margin="0,0,0,20"/>
+        
+        <ScrollViewer Grid.Row="1">
+            <ItemsControl ItemsSource="{Binding Notifications}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="vm:Notification">
+                        <Border Classes="card" Margin="0,0,0,12" Padding="16"
+                                Background="{Binding IsRead, Converter={x:Static vm:NotificationBackgroundConverter.Instance}}">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="{Binding Title}" FontWeight="SemiBold"/>
+                                    <TextBlock Text="{Binding Message}" TextWrapping="Wrap" Margin="0,4,0,0" Foreground="#9CA3AF"/>
+                                    <TextBlock Text="{Binding CreatedAt, StringFormat='{}{0:dd.MM.yyyy HH:mm}'}" 
+                                               FontSize="11" Foreground="#6B7280" Margin="0,8,0,0"/>
+                                </StackPanel>
+                                <Border Grid.Column="1" Background="#3B82F6" Width="8" Height="8" 
+                                        CornerRadius="4" VerticalAlignment="Top"
+                                        IsVisible="{Binding !IsRead}"/>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+    </Grid>
+</Window>

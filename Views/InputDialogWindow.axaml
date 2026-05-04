@@ -1,0 +1,46 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:VideoHostingByWhoami.Views"
+        x:Class="VideoHostingByWhoami.Views.InputDialogWindow"
+        x:DataType="vm:InputDialogViewModel"
+        Title="Ввод"
+        Width="400" Height="200"
+        WindowStartupLocation="CenterOwner"
+        Background="#030712"
+        CanResize="False">
+
+    <Window.Styles>
+        <Style Selector="TextBox">
+            <Setter Property="Background" Value="#1F2937"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="#374151"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="12,8"/>
+        </Style>
+        <Style Selector="Button">
+            <Setter Property="Background" Value="#3B82F6"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="16,8"/>
+        </Style>
+        <Style Selector="Button.secondary">
+            <Setter Property="Background" Value="#374151"/>
+        </Style>
+        <Style Selector="TextBlock">
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+    </Window.Styles>
+
+    <StackPanel Margin="20" Spacing="16">
+        <TextBlock Text="{Binding Prompt}" FontSize="16"/>
+        <TextBox Text="{Binding Input}" PlaceholderText="{Binding Prompt}"/>
+        <Grid ColumnDefinitions="*,*" Margin="0,8,0,0">
+            <Button Grid.Column="0" Content="Отмена" Classes="secondary"
+                    Command="{Binding CancelCommand}" Margin="0,0,8,0"
+                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
+            <Button Grid.Column="1" Content="OK"
+                    Command="{Binding ConfirmCommand}" Margin="8,0,0,0"
+                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
+        </Grid>
+    </StackPanel>
+</Window>

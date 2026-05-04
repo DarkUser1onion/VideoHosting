@@ -17,17 +17,35 @@ build_property.PlatformNeutralAssembly =
 build_property.EnforceExtendedAnalyzerRules = 
 build_property._SupportedPlatformList = Linux,macOS,Windows
 build_property.RootNamespace = VideoHostingByWhoami
-build_property.ProjectDir = /home/Whoami/Desktop/VideoHostingByWhoami/
+build_property.ProjectDir = /home/user/VideoHosting/
 build_property.EnableComHosting = 
 build_property.EnableGeneratedComInterfaceComImportInterop = 
 build_property.EffectiveAnalysisLevelStyle = 10.0
 build_property.EnableCodeStyleSeverity = 
 
-[/home/Whoami/Desktop/VideoHostingByWhoami/App.axaml]
+[/home/user/VideoHosting/App.axaml]
 build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
 
-[/home/Whoami/Desktop/VideoHostingByWhoami/Views/MainWindow.axaml]
+[/home/user/VideoHosting/Views/InputDialogWindow.axaml]
 build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
 
-[/home/Whoami/Desktop/VideoHostingByWhoami/Views/PlayerWindow.axaml]
+[/home/user/VideoHosting/Views/MainWindow.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[/home/user/VideoHosting/Views/ModerationWindow.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[/home/user/VideoHosting/Views/NotificationsWindow.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[/home/user/VideoHosting/Views/PlayerWindow.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[/home/user/VideoHosting/Views/PlaylistSelectorWindow.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[/home/user/VideoHosting/Views/PlaylistWindow.axaml]
+build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml
+
+[/home/user/VideoHosting/Views/UploadWindow.axaml]
 build_metadata.AdditionalFiles.SourceItemGroup = AvaloniaXaml

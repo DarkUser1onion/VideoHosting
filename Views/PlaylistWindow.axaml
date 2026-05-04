@@ -1,0 +1,99 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:VideoHostingByWhoami.Model"
+        x:Class="VideoHostingByWhoami.Views.PlaylistWindow"
+        x:DataType="vm:PlaylistViewModel"
+        x:Name="PlaylistWnd"
+        Title="Мои плейлисты"
+        Width="800" Height="600"
+        WindowStartupLocation="CenterOwner"
+        Background="#030712">
+
+    <Window.Styles>
+        <Style Selector="TextBox">
+            <Setter Property="Background" Value="#1F2937"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="#374151"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="12,8"/>
+        </Style>
+        <Style Selector="Button">
+            <Setter Property="Background" Value="#3B82F6"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="16,8"/>
+            <Style Selector="^:pointerover">
+                <Setter Property="Background" Value="#2563EB"/>
+            </Style>
+        </Style>
+        <Style Selector="Button.secondary">
+            <Setter Property="Background" Value="#374151"/>
+            <Style Selector="^:pointerover">
+                <Setter Property="Background" Value="#4B5563"/>
+            </Style>
+        </Style>
+        <Style Selector="TextBlock">
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+        <Style Selector="Border.card">
+            <Setter Property="Background" Value="#1F2937"/>
+            <Setter Property="CornerRadius" Value="12"/>
+        </Style>
+    </Window.Styles>
+
+    <Grid RowDefinitions="Auto,*" Margin="20">
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,20">
+            <TextBlock Text="Мои плейлисты" FontSize="24" FontWeight="Bold"/>
+            <Button Content="+" Classes="secondary" Margin="20,0,0,0"
+                    Command="{Binding CreatePlaylistCommand}"/>
+        </StackPanel>
+        
+        <!-- Playlists List -->
+        <ScrollViewer Grid.Row="1">
+            <ItemsControl ItemsSource="{Binding Playlists}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="vm:Playlist">
+                        <Border Classes="card" Margin="0,0,0,16" Padding="16">
+                            <Expander>
+                                <Expander.Header>
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <TextBlock Grid.Column="0" Text="{Binding Name}" 
+                                                   FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                                            <TextBlock Text="{Binding Videos.Count}" Foreground="#9CA3AF"
+                                                       VerticalAlignment="Center"/>
+                                            <TextBlock Text="видео" Foreground="#9CA3AF"
+                                                       VerticalAlignment="Center"/>
+                                            <Button Classes="secondary" Content="🗑️" Padding="8,4"
+                                                    Command="{Binding $parent[Window].DataContext.DeletePlaylistCommand}"
+                                                    CommandParameter="{Binding Id}"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </Expander.Header>
+                                
+                                <ItemsControl ItemsSource="{Binding Videos}" Margin="16,8,0,0">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate DataType="vm:VideoItem">
+                                            <Border Background="#111827" CornerRadius="8" Padding="12" Margin="0,0,0,8">
+                                                <Grid ColumnDefinitions="*,Auto">
+                                                    <StackPanel Grid.Column="0">
+                                                        <TextBlock Text="{Binding Title}" FontWeight="SemiBold"/>
+                                                        <TextBlock Text="{Binding AuthorName}" Foreground="#9CA3AF" FontSize="12"/>
+                                                    </StackPanel>
+                                                    <Button Grid.Column="1" Classes="secondary" Content="×" Padding="8,4"
+                                                            Command="{Binding $parent[Window].DataContext.RemoveFromPlaylistCommand}"
+                                                            CommandParameter="{Binding Id}"/>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </Expander>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+    </Grid>
+</Window>

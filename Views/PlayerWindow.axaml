@@ -1,10 +1,187 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:VideoHostingByWhoami.Model"
         x:Class="VideoHostingByWhoami.Views.PlayerWindow"
-        Title="Player"
-        Width="640" Height="360">
-    <Grid>
-        <TextBlock Text="Видеоплеер будет здесь"
-                   VerticalAlignment="Center" HorizontalAlignment="Center"/>
+        x:DataType="vm:PlayerViewModel"
+        Title="{Binding VideoTitle}"
+        Width="1200" Height="800"
+        MinWidth="800" MinHeight="600"
+        WindowStartupLocation="CenterScreen"
+        Background="#030712">
+
+    <Window.Styles>
+        <Style Selector="TextBox">
+            <Setter Property="Background" Value="#1F2937"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="#374151"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="12,8"/>
+        </Style>
+        <Style Selector="Button">
+            <Setter Property="Background" Value="#3B82F6"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="16,8"/>
+            <Style Selector="^:pointerover">
+                <Setter Property="Background" Value="#2563EB"/>
+            </Style>
+        </Style>
+        <Style Selector="Button.secondary">
+            <Setter Property="Background" Value="#374151"/>
+            <Style Selector="^:pointerover">
+                <Setter Property="Background" Value="#4B5563"/>
+            </Style>
+        </Style>
+        <Style Selector="Button.like">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Padding" Value="8,4"/>
+        </Style>
+        <Style Selector="Button.like.active">
+            <Setter Property="Foreground" Value="#3B82F6"/>
+        </Style>
+        <Style Selector="TextBlock">
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+        <Style Selector="Border.card">
+            <Setter Property="Background" Value="#1F2937"/>
+            <Setter Property="CornerRadius" Value="12"/>
+        </Style>
+    </Window.Styles>
+
+    <Grid ColumnDefinitions="*,400" Margin="0">
+        <!-- Video Player Section -->
+        <Border Classes="card" Margin="20" Padding="0">
+            <Grid RowDefinitions="Auto,*,Auto,Auto">
+                <!-- Video Title -->
+                <TextBlock Grid.Row="0" Text="{Binding Video.Title}" FontSize="20" FontWeight="Bold"
+                           Margin="16,16,16,0"/>
+                
+                <!-- Video Player -->
+                <Border Grid.Row="1" Background="#000000" Margin="16" CornerRadius="8">
+                    <Grid>
+                        <!-- Video info placeholder - in production use LibVLCSharp or similar -->
+                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="16">
+                            <TextBlock Text="▶" FontSize="64" Foreground="#3B82F6" 
+                                       HorizontalAlignment="Center"/>
+                            <TextBlock Text="{Binding Video.Title}" FontSize="20" 
+                                       HorizontalAlignment="Center" TextWrapping="Wrap" 
+                                       MaxWidth="400"/>
+                            <TextBlock Text="Для воспроизведения видео необходимо установить LibVLC" 
+                                       FontSize="12" Foreground="#6B7280"
+                                       HorizontalAlignment="Center" TextWrapping="Wrap"
+                                       MaxWidth="300"/>
+                            <Button Content="Открыть в плеере" Classes="secondary" Margin="0,8,0,0"
+                                    Command="{Binding OpenExternalCommand}"/>
+                        </StackPanel>
+                        
+                        <!-- Loading indicator -->
+                        <TextBlock Text="Загрузка видео..." FontSize="16"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                                   IsVisible="{Binding IsLoading}"/>
+                    </Grid>
+                </Border>
+                
+                <!-- Video Actions -->
+                <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="16,0,16,16" Spacing="12">
+                    <Button Classes="like" Command="{Binding LikeCommand}">
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <TextBlock Text="👍" FontSize="18"/>
+                            <TextBlock Text="{Binding Video.Likes}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    
+                    <Button Classes="like" Command="{Binding DislikeCommand}">
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <TextBlock Text="👎" FontSize="18"/>
+                            <TextBlock Text="{Binding Video.Dislikes}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    
+                    <Button Classes="secondary" Command="{Binding AddToPlaylistCommand}">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <TextBlock Text="➕"/>
+                            <TextBlock Text="В плейлист"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+                
+                <!-- Video Info -->
+                <Border Grid.Row="3" Classes="card" Margin="16,0,16,16" Padding="16">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="16" Margin="0,0,0,12">
+                            <TextBlock Text="{Binding Video.Views}" Foreground="#9CA3AF"/>
+                            <TextBlock Text="просмотров" Foreground="#9CA3AF"/>
+                            <TextBlock Text="•" Foreground="#9CA3AF"/>
+                            <TextBlock Text="{Binding Video.UploadedAt, StringFormat='{}{0:dd.MM.yyyy}'}" Foreground="#9CA3AF"/>
+                        </StackPanel>
+                        
+                        <TextBlock Text="Автор:" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                        <TextBlock Text="{Binding Video.AuthorName}" Foreground="#9CA3AF" Margin="0,0,0,12"/>
+                        
+                        <TextBlock Text="Описание:" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                        <TextBlock Text="{Binding Video.Description}" TextWrapping="Wrap" Foreground="#D1D5DB"/>
+                        
+                        <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,12,0,0">
+                            <TextBlock Text="Категория:" Foreground="#9CA3AF"/>
+                            <TextBlock Text="{Binding Video.Category}"/>
+                        </StackPanel>
+                        
+                        <ItemsControl ItemsSource="{Binding Video.Tags}" Margin="0,8,0,0">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="#374151" CornerRadius="4" Padding="8,4" Margin="0,0,8,4">
+                                        <TextBlock Text="{Binding}" FontSize="12"/>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+        
+        <!-- Comments Section -->
+        <Border Grid.Column="1" Classes="card" Margin="0,20,20,20">
+            <Grid RowDefinitions="Auto,*">
+                <TextBlock Grid.Row="0" Text="Комментарии" FontSize="18" FontWeight="Bold"
+                           Margin="16"/>
+                
+                <Grid Grid.Row="1" RowDefinitions="*,Auto">
+                    <!-- Comments List -->
+                    <ScrollViewer Grid.Row="0">
+                        <ItemsControl ItemsSource="{Binding Comments}" Margin="16,0">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="vm:Comment">
+                                    <Border Background="#111827" CornerRadius="8" Padding="12" Margin="0,0,0,8">
+                                        <StackPanel>
+                                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                                <TextBlock Text="{Binding UserName}" FontWeight="SemiBold"/>
+                                                <TextBlock Text="{Binding TimeAgo}" Foreground="#9CA3AF" FontSize="11"/>
+                                            </StackPanel>
+                                            <TextBlock Text="{Binding Content}" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                    
+                    <!-- Add Comment -->
+                    <Border Grid.Row="1" Background="#111827" Padding="16" Margin="16">
+                        <StackPanel Spacing="8">
+                            <TextBox Text="{Binding NewComment}" PlaceholderText="Написать комментарий..."
+                                     AcceptsReturn="True" TextWrapping="Wrap" Height="80"/>
+                            <Button Content="Отправить" Command="{Binding SendCommentCommand}"
+                                    HorizontalAlignment="Right"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Grid>
+        </Border>
     </Grid>
 </Window>

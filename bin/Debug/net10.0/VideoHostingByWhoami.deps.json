@@ -12,8 +12,7 @@
           "Avalonia.Desktop": "12.0.2",
           "Avalonia.Fonts.Inter": "12.0.2",
           "Avalonia.Skia": "12.0.2",
-          "Avalonia.Themes.Fluent": "12.0.2",
-          "AvaloniaUI.DiagnosticsSupport": "2.2.1"
+          "Avalonia.Themes.Fluent": "12.0.2"
         },
         "runtime": {
           "VideoHostingByWhoami.dll": {}
@@ -235,18 +234,6 @@
           }
         }
       },
-      "AvaloniaUI.DiagnosticsSupport/2.2.1": {
-        "dependencies": {
-          "Microsoft.Extensions.Logging.Abstractions": "8.0.0",
-          "Microsoft.IO.RecyclableMemoryStream": "3.0.1"
-        },
-        "runtime": {
-          "lib/net10.0/AvaloniaUI.DiagnosticsSupport.Avalonia.dll": {
-            "assemblyVersion": "2.2.1.0",
-            "fileVersion": "2.2.1.0"
-          }
-        }
-      },
       "HarfBuzzSharp/8.3.1.3": {
         "dependencies": {
           "HarfBuzzSharp.NativeAssets.Win32": "8.3.1.3",
@@ -366,33 +353,6 @@
           "lib/net5.0/MicroCom.Runtime.dll": {
             "assemblyVersion": "0.11.4.0",
             "fileVersion": "0.11.4.0"
-          }
-        }
-      },
-      "Microsoft.Extensions.DependencyInjection.Abstractions/8.0.0": {
-        "runtime": {
-          "lib/net8.0/Microsoft.Extensions.DependencyInjection.Abstractions.dll": {
-            "assemblyVersion": "8.0.0.0",
-            "fileVersion": "8.0.23.53103"
-          }
-        }
-      },
-      "Microsoft.Extensions.Logging.Abstractions/8.0.0": {
-        "dependencies": {
-          "Microsoft.Extensions.DependencyInjection.Abstractions": "8.0.0"
-        },
-        "runtime": {
-          "lib/net8.0/Microsoft.Extensions.Logging.Abstractions.dll": {
-            "assemblyVersion": "8.0.0.0",
-            "fileVersion": "8.0.23.53103"
-          }
-        }
-      },
-      "Microsoft.IO.RecyclableMemoryStream/3.0.1": {
-        "runtime": {
-          "lib/net6.0/Microsoft.IO.RecyclableMemoryStream.dll": {
-            "assemblyVersion": "3.0.1.0",
-            "fileVersion": "3.0.1.0"
           }
         }
       },
@@ -627,13 +587,6 @@
       "path": "avalonia.x11/12.0.2",
       "hashPath": "avalonia.x11.12.0.2.nupkg.sha512"
     },
-    "AvaloniaUI.DiagnosticsSupport/2.2.1": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-PXviRj+8t6IT7JdnVhs1EET+VgGB/K1Ju3yL/Q9sXR2YD9NzkIYybyfJG3DPXcTYXpEJZJvxGiCTjH1N8AkLhQ==",
-      "path": "avaloniaui.diagnosticssupport/2.2.1",
-      "hashPath": "avaloniaui.diagnosticssupport.2.2.1.nupkg.sha512"
-    },
     "HarfBuzzSharp/8.3.1.3": {
       "type": "package",
       "serviceable": true,
@@ -668,27 +621,6 @@
       "sha512": "sha512-yZ8+Lgwo+KtRI29TB2mIOEMzV+csMJ+pKZg4YHReAP3vRewWLKKeYfrBDo5FS69rWnEbCfU3sbM+ZEQr+GDLtg==",
       "path": "microcom.runtime/0.11.4",
       "hashPath": "microcom.runtime.0.11.4.nupkg.sha512"
-    },
-    "Microsoft.Extensions.DependencyInjection.Abstractions/8.0.0": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-cjWrLkJXK0rs4zofsK4bSdg+jhDLTaxrkXu4gS6Y7MAlCvRyNNgwY/lJi5RDlQOnSZweHqoyvgvbdvQsRIW+hg==",
-      "path": "microsoft.extensions.dependencyinjection.abstractions/8.0.0",
-      "hashPath": "microsoft.extensions.dependencyinjection.abstractions.8.0.0.nupkg.sha512"
-    },
-    "Microsoft.Extensions.Logging.Abstractions/8.0.0": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-arDBqTgFCyS0EvRV7O3MZturChstm50OJ0y9bDJvAcmEPJm0FFpFyjU/JLYyStNGGey081DvnQYlncNX5SJJGA==",
-      "path": "microsoft.extensions.logging.abstractions/8.0.0",
-      "hashPath": "microsoft.extensions.logging.abstractions.8.0.0.nupkg.sha512"
-    },
-    "Microsoft.IO.RecyclableMemoryStream/3.0.1": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-s/s20YTVY9r9TPfTrN5g8zPF1YhwxyqO6PxUkrYTGI2B+OGPe9AdajWZrLhFqXIvqIW23fnUE4+ztrUWNU1+9g==",
-      "path": "microsoft.io.recyclablememorystream/3.0.1",
-      "hashPath": "microsoft.io.recyclablememorystream.3.0.1.nupkg.sha512"
     },
     "SkiaSharp/3.119.4-preview.1.1": {
       "type": "package",

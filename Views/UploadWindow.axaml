@@ -1,0 +1,106 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:VideoHostingByWhoami.Model"
+        x:Class="VideoHostingByWhoami.Views.UploadWindow"
+        x:DataType="vm:UploadViewModel"
+        Title="Загрузка видео"
+        Width="600" Height="700"
+        WindowStartupLocation="CenterOwner"
+        Background="#030712"
+        CanResize="False">
+
+    <Window.Styles>
+        <Style Selector="TextBox">
+            <Setter Property="Background" Value="#1F2937"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="#374151"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="12,8"/>
+        </Style>
+        <Style Selector="Button">
+            <Setter Property="Background" Value="#3B82F6"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="16,8"/>
+            <Style Selector="^:pointerover">
+                <Setter Property="Background" Value="#2563EB"/>
+            </Style>
+        </Style>
+        <Style Selector="Button.secondary">
+            <Setter Property="Background" Value="#374151"/>
+            <Style Selector="^:pointerover">
+                <Setter Property="Background" Value="#4B5563"/>
+            </Style>
+        </Style>
+        <Style Selector="TextBlock">
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+        <Style Selector="Border.card">
+            <Setter Property="Background" Value="#1F2937"/>
+            <Setter Property="CornerRadius" Value="12"/>
+        </Style>
+    </Window.Styles>
+
+    <Border Classes="card" Margin="20" Padding="30">
+        <StackPanel Spacing="20">
+            <TextBlock Text="Загрузка нового видео" FontSize="24" FontWeight="Bold"
+                       HorizontalAlignment="Center"/>
+            
+            <!-- Title -->
+            <StackPanel Spacing="8">
+                <TextBlock Text="Название" FontWeight="SemiBold"/>
+                <TextBox Text="{Binding Title}" PlaceholderText="Введите название видео"/>
+            </StackPanel>
+            
+            <!-- Description -->
+            <StackPanel Spacing="8">
+                <TextBlock Text="Описание" FontWeight="SemiBold"/>
+                <TextBox Text="{Binding Description}" PlaceholderText="Описание видео"
+                         AcceptsReturn="True" TextWrapping="Wrap" Height="80"/>
+            </StackPanel>
+            
+            <!-- Category -->
+            <StackPanel Spacing="8">
+                <TextBlock Text="Категория" FontWeight="SemiBold"/>
+                <ComboBox ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory}"
+                          HorizontalAlignment="Stretch" PlaceholderText="Выберите категорию"/>
+            </StackPanel>
+            
+            <!-- Tags -->
+            <StackPanel Spacing="8">
+                <TextBlock Text="Теги (через запятую)" FontWeight="SemiBold"/>
+                <TextBox Text="{Binding TagsText}" PlaceholderText="образование, программирование, ..."/>
+            </StackPanel>
+            
+            <!-- File Selection -->
+            <StackPanel Spacing="8">
+                <TextBlock Text="Видеофайл" FontWeight="SemiBold"/>
+                <Button Classes="secondary" Content="Выбрать файл" Command="{Binding SelectFileCommand}"
+                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
+                <TextBlock Text="{Binding SelectedFileName}" Foreground="#9CA3AF" 
+                           HorizontalAlignment="Center" IsVisible="{Binding HasFile}"/>
+            </StackPanel>
+            
+            <!-- Progress -->
+            <StackPanel Spacing="8" IsVisible="{Binding IsUploading}">
+                <ProgressBar Value="{Binding UploadProgress}" Maximum="100"/>
+                <TextBlock Text="Загрузка..." HorizontalAlignment="Center"/>
+            </StackPanel>
+            
+            <!-- Error -->
+            <TextBlock Text="{Binding Error}" Foreground="#EF4444" TextWrapping="Wrap"
+                       HorizontalAlignment="Center" IsVisible="{Binding HasError}"/>
+            
+            <!-- Actions -->
+            <Grid ColumnDefinitions="*,*" Margin="0,20,0,0">
+                <Button Grid.Column="0" Content="Отмена" Classes="secondary"
+                        Command="{Binding CancelCommand}" Margin="0,0,8,0"
+                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
+                <Button Grid.Column="1" Content="Загрузить"
+                        Command="{Binding UploadCommand}" Margin="8,0,0,0"
+                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                        IsEnabled="{Binding CanUpload}"/>
+            </Grid>
+        </StackPanel>
+    </Border>
+</Window>
