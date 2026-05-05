@@ -78,7 +78,7 @@
                     <Button Classes="secondary" Width="40" Height="40" Padding="0"
                             Command="{Binding ShowNotificationsCommand}"
                             IsVisible="{Binding IsAuthenticated}">
-                        <TextBlock Text="🔔" FontSize="18"/>
+                        <TextBlock Text="🔔" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Button>
                     
                     <!-- Playlists -->
