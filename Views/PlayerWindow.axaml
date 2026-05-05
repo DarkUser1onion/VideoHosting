@@ -1,13 +1,19 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:VideoHostingByWhoami.Model"
+        xmlns:converters="clr-namespace:VideoHostingByWhoami.Model"
         x:Class="VideoHostingByWhoami.Views.PlayerWindow"
         x:DataType="vm:PlayerViewModel"
         Title="{Binding VideoTitle}"
         Width="1200" Height="800"
         MinWidth="800" MinHeight="600"
         WindowStartupLocation="CenterScreen"
-        Background="#030712">
+        Background="#030712"
+        x:Name="ThisWindow">
+    
+    <Window.Resources>
+        <converters:LikeColorConverter x:Key="LikeColorConverter"/>
+    </Window.Resources>
 
     <Window.Styles>
         <Style Selector="TextBox">
@@ -32,13 +38,6 @@
                 <Setter Property="Background" Value="#4B5563"/>
             </Style>
         </Style>
-        <Style Selector="Button.like">
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Padding" Value="8,4"/>
-        </Style>
-        <Style Selector="Button.like.active">
-            <Setter Property="Foreground" Value="#3B82F6"/>
-        </Style>
         <Style Selector="TextBlock">
             <Setter Property="Foreground" Value="White"/>
         </Style>
@@ -56,41 +55,46 @@
                 <TextBlock Grid.Row="0" Text="{Binding Video.Title}" FontSize="20" FontWeight="Bold"
                            Margin="16,16,16,0"/>
                 
-                <!-- Video Player -->
-                <Border Grid.Row="1" Background="#000000" Margin="16" CornerRadius="8">
-                    <Grid>
-                        <!-- Video info placeholder - in production use LibVLCSharp or similar -->
-                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="16">
-                            <TextBlock Text="▶" FontSize="64" Foreground="#3B82F6" 
-                                       HorizontalAlignment="Center"/>
-                            <TextBlock Text="{Binding Video.Title}" FontSize="20" 
-                                       HorizontalAlignment="Center" TextWrapping="Wrap" 
-                                       MaxWidth="400"/>
-                            <TextBlock Text="Для воспроизведения видео необходимо установить LibVLC" 
-                                       FontSize="12" Foreground="#6B7280"
-                                       HorizontalAlignment="Center" TextWrapping="Wrap"
-                                       MaxWidth="300"/>
-                            <Button Content="Открыть в плеере" Classes="secondary" Margin="0,8,0,0"
-                                    Command="{Binding OpenExternalCommand}"/>
-                        </StackPanel>
-                        
-                        <!-- Loading indicator -->
-                        <TextBlock Text="Загрузка видео..." FontSize="16"
-                                   HorizontalAlignment="Center" VerticalAlignment="Center"
-                                   IsVisible="{Binding IsLoading}"/>
-                    </Grid>
+                <!-- Video Player - NativeControlHost для mpv -->
+                <Border x:Name="PlayerContainer" Grid.Row="1" Background="#000000" Margin="16" CornerRadius="8">
+                    <Panel x:Name="VideoPanel">
+                        <!-- NativeControlHost для встраивания mpv -->
+                    </Panel>
                 </Border>
+                
+                <!-- Loading overlay -->
+                <Panel Grid.Row="1" IsVisible="{Binding !IsPlayerReady}" Margin="16">
+                    <Border Background="#1F2937" CornerRadius="8">
+                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12" Margin="40">
+                            <TextBlock Text="⏳" FontSize="48" HorizontalAlignment="Center"/>
+                            <TextBlock Text="Загрузка плеера..." FontSize="18" HorizontalAlignment="Center"
+                                       Foreground="#9CA3AF"/>
+                        </StackPanel>
+                    </Border>
+                </Panel>
                 
                 <!-- Video Actions -->
                 <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="16,0,16,16" Spacing="12">
-                    <Button Classes="like" Command="{Binding LikeCommand}">
+                    <Button Command="{Binding LikeCommand}">
+                        <Button.Background>
+                            <MultiBinding Converter="{StaticResource LikeColorConverter}">
+                                <Binding Path="IsLikeActive"/>
+                                <Binding Source="like"/>
+                            </MultiBinding>
+                        </Button.Background>
                         <StackPanel Orientation="Horizontal" Spacing="4">
                             <TextBlock Text="👍" FontSize="18"/>
                             <TextBlock Text="{Binding Video.Likes}" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
                     
-                    <Button Classes="like" Command="{Binding DislikeCommand}">
+                    <Button Command="{Binding DislikeCommand}">
+                        <Button.Background>
+                            <MultiBinding Converter="{StaticResource LikeColorConverter}">
+                                <Binding Path="IsDislikeActive"/>
+                                <Binding Source="dislike"/>
+                            </MultiBinding>
+                        </Button.Background>
                         <StackPanel Orientation="Horizontal" Spacing="4">
                             <TextBlock Text="👎" FontSize="18"/>
                             <TextBlock Text="{Binding Video.Dislikes}" VerticalAlignment="Center"/>
@@ -103,6 +107,10 @@
                             <TextBlock Text="В плейлист"/>
                         </StackPanel>
                     </Button>
+
+                    <Button Classes="secondary" Content="Удалить видео"
+                            Command="{Binding DeleteVideoCommand}"
+                            IsVisible="{Binding CanDeleteVideo}"/>
                 </StackPanel>
                 
                 <!-- Video Info -->
@@ -123,7 +131,7 @@
                         
                         <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,12,0,0">
                             <TextBlock Text="Категория:" Foreground="#9CA3AF"/>
-                            <TextBlock Text="{Binding Video.Category}"/>
+                            <TextBlock Text="{Binding Video.CategoryDisplay}"/>
                         </StackPanel>
                         
                         <ItemsControl ItemsSource="{Binding Video.Tags}" Margin="0,8,0,0">
@@ -158,13 +166,24 @@
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate DataType="vm:Comment">
                                     <Border Background="#111827" CornerRadius="8" Padding="12" Margin="0,0,0,8">
-                                        <StackPanel>
-                                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                                <TextBlock Text="{Binding UserName}" FontWeight="SemiBold"/>
-                                                <TextBlock Text="{Binding TimeAgo}" Foreground="#9CA3AF" FontSize="11"/>
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <StackPanel Grid.Column="0">
+                                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                                    <TextBlock Text="{Binding UserName}" FontWeight="SemiBold"/>
+                                                    <TextBlock Text="{Binding TimeAgo}" Foreground="#9CA3AF" FontSize="11"/>
+                                                </StackPanel>
+                                                <TextBlock Text="{Binding Content}" TextWrapping="Wrap" Margin="0,4,0,0"/>
                                             </StackPanel>
-                                            <TextBlock Text="{Binding Content}" TextWrapping="Wrap" Margin="0,4,0,0"/>
-                                        </StackPanel>
+                                            <Button Grid.Column="1" 
+                                                    Content="✕" 
+                                                    Padding="8,4" 
+                                                    FontSize="12"
+                                                    Background="Transparent" 
+                                                    Foreground="#9CA3AF"
+                                                    Command="{Binding #ThisWindow.DataContext.DeleteCommentCommand}"
+                                                    CommandParameter="{Binding Id}"
+                                                    IsVisible="{Binding #ThisWindow.DataContext.CanDeleteComments}"/>
+                                        </Grid>
                                     </Border>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>

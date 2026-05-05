@@ -123,7 +123,8 @@ public class AppDbContext : DbContext
             entity.HasOne(e => e.Moderator)
                 .WithMany()
                 .HasForeignKey(e => e.ModeratorId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Restrict)
+                .IsRequired(false);
         });
         
         // Notification configuration

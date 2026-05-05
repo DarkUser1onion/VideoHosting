@@ -1,9 +1,17 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:model="clr-namespace:VideoHostingByWhoami.Model"
              x:Class="VideoHostingByWhoami.App"
              RequestedThemeVariant="Dark">
-    
+
     <Application.Styles>
         <FluentTheme />
     </Application.Styles>
+
+    <Application.Resources>
+        <model:LikeToOpacityConverter x:Key="LikeToOpacityConverter" />
+        <model:BoolToOpacityConverter x:Key="BoolToOpacityConverter" />
+        <model:BoolToActiveColorConverter x:Key="BoolToActiveColorConverter" />
+        <model:LikeColorConverter x:Key="LikeColorConverter" />
+    </Application.Resources>
 </Application>

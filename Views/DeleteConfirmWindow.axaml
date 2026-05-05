@@ -1,0 +1,36 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="VideoHostingByWhoami.Views.DeleteConfirmWindow"
+        Width="440" Height="190"
+        WindowStartupLocation="CenterOwner"
+        Background="#030712"
+        CanResize="False"
+        Title="Подтвердите удаление">
+
+    <Window.Styles>
+        <Style Selector="Button">
+            <Setter Property="Background" Value="#3B82F6"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="16,8"/>
+        </Style>
+        <Style Selector="Button.secondary">
+            <Setter Property="Background" Value="#374151"/>
+        </Style>
+        <Style Selector="TextBlock">
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+    </Window.Styles>
+
+    <StackPanel Margin="20" Spacing="14">
+        <TextBlock Text="Видео будет удалено без возможности восстановления."
+                   TextWrapping="Wrap"/>
+        <TextBlock x:Name="TimerText" Foreground="#9CA3AF"/>
+        <Grid ColumnDefinitions="*,*" Margin="0,6,0,0">
+            <Button Grid.Column="0" Content="Отмена" Classes="secondary" Margin="0,0,8,0"
+                    Click="OnCancelClick"/>
+            <Button Grid.Column="1" x:Name="ConfirmButton" Content="Подтвердить" Margin="8,0,0,0"
+                    IsEnabled="False" Click="OnConfirmClick"/>
+        </Grid>
+    </StackPanel>
+</Window>

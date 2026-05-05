@@ -1,6 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:VideoHostingByWhoami.Model"
+        xmlns:views="clr-namespace:VideoHostingByWhoami.Views"
         x:Class="VideoHostingByWhoami.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Title="VideoHosting"
@@ -31,6 +32,13 @@
             <Style Selector="^:pointerover">
                 <Setter Property="Background" Value="#4B5563"/>
             </Style>
+        </Style>
+        <Style Selector="Button.like">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Padding" Value="8,4"/>
+        </Style>
+        <Style Selector="Button.like.active">
+            <Setter Property="Foreground" Value="#3B82F6"/>
         </Style>
         <Style Selector="Button.danger">
             <Setter Property="Background" Value="#EF4444"/>
@@ -68,7 +76,10 @@
                     <Button Classes="secondary" Width="40" Height="40" Padding="0"
                             Command="{Binding ShowNotificationsCommand}"
                             IsVisible="{Binding IsAuthenticated}">
-                        <TextBlock Text="🔔" FontSize="18"/>
+                        <TextBlock Text="🔔" FontSize="18"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"
+                                   TextAlignment="Center"/>
                     </Button>
                     
                     <!-- Playlists -->
@@ -85,32 +96,27 @@
                     <Button Classes="secondary" Content="Модерация"
                             Command="{Binding ShowModerationCommand}"
                             IsVisible="{Binding IsModerator}"/>
+
+                    <!-- Admin -->
+                    <Button Classes="secondary" Content="Админ-панель"
+                            Command="{Binding ShowAdminPanelCommand}"
+                            IsVisible="{Binding IsAdmin}"/>
                     
                     <!-- User info / Auth -->
                     <StackPanel Orientation="Horizontal" Spacing="8">
-                        <Button Classes="secondary" Content="{Binding UserButton}"
-                                Command="{Binding AuthCommand}"/>
+                        <Button Classes="secondary" Content="{Binding UserButton}" MinWidth="160"
+                                Click="OnAuthButtonClick"/>
                     </StackPanel>
                 </StackPanel>
                 
                 <!-- Categories -->
-                <ScrollViewer DockPanel.Dock="Left" HorizontalScrollBarVisibility="Hidden" 
-                              Margin="20,0,0,0">
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                        <Button Classes="secondary" Content="Все" 
-                                Command="{Binding SelectCategoryCommand}" CommandParameter=""/>
-                        <Button Classes="secondary" Content="Образование"
-                                Command="{Binding SelectCategoryCommand}" CommandParameter="education"/>
-                        <Button Classes="secondary" Content="Развлечения"
-                                Command="{Binding SelectCategoryCommand}" CommandParameter="entertainment"/>
-                        <Button Classes="secondary" Content="Технологии"
-                                Command="{Binding SelectCategoryCommand}" CommandParameter="technology"/>
-                        <Button Classes="secondary" Content="Музыка"
-                                Command="{Binding SelectCategoryCommand}" CommandParameter="music"/>
-                        <Button Classes="secondary" Content="Спорт"
-                                Command="{Binding SelectCategoryCommand}" CommandParameter="sport"/>
-                    </StackPanel>
-                </ScrollViewer>
+                <ComboBox DockPanel.Dock="Left"
+                          Width="180"
+                          Margin="20,0,0,0"
+                          ItemsSource="{Binding CategoryFilters}"
+                          SelectedItem="{Binding SelectedCategoryFilter}"
+                          HorizontalAlignment="Left"
+                          VerticalAlignment="Center"/>
             </DockPanel>
         </Border>
         
@@ -135,7 +141,7 @@
                                         <!-- Preview -->
                                         <Border Grid.Row="0" Background="#374151" CornerRadius="8,8,0,0">
                                             <Grid>
-                                                <Image Source="{Binding PreviewUrl}" Stretch="UniformToFill"/>
+                                                <Image Source="{Binding PreviewImage}" Stretch="UniformToFill"/>
                                                 <Border Background="#00000080" CornerRadius="4" 
                                                         VerticalAlignment="Bottom" HorizontalAlignment="Right"
                                                         Margin="8" Padding="6,2">
@@ -165,6 +171,8 @@
                     </ItemsControl>
                 </StackPanel>
             </ScrollViewer>
+
+
             
             <!-- Auth Panel -->
             <Border Classes="card" Width="400" HorizontalAlignment="Center" VerticalAlignment="Center"
@@ -172,11 +180,18 @@
                 <StackPanel Spacing="20">
                     <TextBlock Text="{Binding AuthTitle}" FontSize="24" FontWeight="Bold" 
                                HorizontalAlignment="Center"/>
+                    <TextBlock Text="Это форма входа и регистрации. Введите логин и пароль, затем нажмите кнопку ниже."
+                               Foreground="#9CA3AF"
+                               TextWrapping="Wrap"
+                               TextAlignment="Center"/>
                     
-                    <TextBox Text="{Binding AuthLogin}" PlaceholderText="Логин"/>
-                    <TextBox Text="{Binding AuthPassword}" PlaceholderText="Пароль" PasswordChar="●"/>
+                    <TextBox Text="{Binding AuthLogin}" PlaceholderText="Логин"
+                             KeyDown="OnAuthInputKeyDown"/>
+                    <TextBox Text="{Binding AuthPassword}" PlaceholderText="Пароль" PasswordChar="●"
+                             KeyDown="OnAuthInputKeyDown"/>
                     
                     <Button Content="{Binding AuthButtonText}" Command="{Binding DoAuthCommand}"
+                            IsDefault="True"
                             HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"/>
                     
                     <Button Classes="secondary" Content="{Binding SwitchAuthText}"

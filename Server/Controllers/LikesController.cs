@@ -22,12 +22,12 @@ public class LikesController : ControllerBase
     public async Task<IActionResult> GetLikeStatus(Guid videoId)
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (userIdClaim == null) return Ok(new { hasLike = (bool?)null });
+        if (userIdClaim == null) return Ok(new LikeStatusResponse(null));
         
         var userId = Guid.Parse(userIdClaim);
         var status = await _interactionService.GetUserLikeStatusAsync(userId, videoId);
         
-        return Ok(new { hasLike = status });
+        return Ok(new LikeStatusResponse(status));
     }
     
     [Authorize]
@@ -40,7 +40,8 @@ public class LikesController : ControllerBase
         var userId = Guid.Parse(userIdClaim);
         var like = await _interactionService.SetLikeAsync(userId, request);
         
-        if (like == null) return NotFound();
+        // null означает, что лайк был успешно удалён (toggle)
+        if (like == null) return Ok(new { removed = true });
         return Ok(like);
     }
     

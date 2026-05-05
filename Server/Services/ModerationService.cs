@@ -38,7 +38,7 @@ public class ModerationService : IModerationService
             v.Description,
             v.Category,
             v.Tags,
-            $"/api/video/{v.Id}/preview",
+            $"/api/videos/{v.Id}/preview",
             v.Duration,
             v.Views,
             v.Status,

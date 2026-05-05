@@ -110,32 +110,41 @@ public class InteractionService : IInteractionService
     
     #region Likes
     
-    public async Task<LikeDto?> SetLikeAsync(Guid userId, LikeRequest request)
+public async Task<LikeDto?> SetLikeAsync(Guid userId, LikeRequest request)
+{
+    var existingLike = await _context.Likes
+        .FirstOrDefaultAsync(l => l.VideoId == request.VideoId && l.UserId == userId);
+
+    if (existingLike != null)
     {
-        var existingLike = await _context.Likes
-            .FirstOrDefaultAsync(l => l.VideoId == request.VideoId && l.UserId == userId);
-        
-        if (existingLike != null)
+        if (existingLike.IsLike == request.IsLike)
         {
-            existingLike.IsLike = request.IsLike;
+            // Повторное нажатие на ту же кнопку – удаляем лайк полностью
+            _context.Likes.Remove(existingLike);
             await _context.SaveChangesAsync();
-            
-            return new LikeDto(existingLike.Id, existingLike.VideoId, existingLike.UserId, existingLike.IsLike);
+            return null; // теперь лайка нет
         }
-        
-        var like = new Like
-        {
-            Id = Guid.NewGuid(),
-            VideoId = request.VideoId,
-            UserId = userId,
-            IsLike = request.IsLike
-        };
-        
-        _context.Likes.Add(like);
+
+        // Переключение между лайком и дизлайком
+        existingLike.IsLike = request.IsLike;
         await _context.SaveChangesAsync();
-        
-        return new LikeDto(like.Id, like.VideoId, like.UserId, like.IsLike);
+        return new LikeDto(existingLike.Id, existingLike.VideoId, existingLike.UserId, existingLike.IsLike);
     }
+
+    // Лайка нет – создаём новый
+    var like = new Like
+    {
+        Id = Guid.NewGuid(),
+        VideoId = request.VideoId,
+        UserId = userId,
+        IsLike = request.IsLike
+    };
+
+    _context.Likes.Add(like);
+    await _context.SaveChangesAsync();
+
+    return new LikeDto(like.Id, like.VideoId, like.UserId, like.IsLike);
+}
     
     public async Task<bool> RemoveLikeAsync(Guid userId, Guid videoId)
     {
@@ -189,7 +198,7 @@ public class InteractionService : IInteractionService
                     pv.Video.Description,
                     pv.Video.Category,
                     pv.Video.Tags,
-                    $"/api/video/{pv.Video.Id}/preview",
+                    $"/api/videos/{pv.Video.Id}/preview",
                     pv.Video.Duration,
                     pv.Video.Views,
                     pv.Video.Status,

@@ -76,12 +76,15 @@
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate DataType="vm:VideoItem">
                                             <Border Background="#111827" CornerRadius="8" Padding="12" Margin="0,0,0,8">
-                                                <Grid ColumnDefinitions="*,Auto">
+                                                <Grid ColumnDefinitions="*,Auto,Auto">
                                                     <StackPanel Grid.Column="0">
                                                         <TextBlock Text="{Binding Title}" FontWeight="SemiBold"/>
                                                         <TextBlock Text="{Binding AuthorName}" Foreground="#9CA3AF" FontSize="12"/>
                                                     </StackPanel>
-                                                    <Button Grid.Column="1" Classes="secondary" Content="×" Padding="8,4"
+                                                    <Button Grid.Column="1" Classes="secondary" Content="▶" Padding="8,4" Margin="8,0"
+                                                            Command="{Binding $parent[Window].DataContext.OpenVideoCommand}"
+                                                            CommandParameter="{Binding}"/>
+                                                    <Button Grid.Column="2" Classes="secondary" Content="×" Padding="8,4"
                                                             Command="{Binding $parent[Window].DataContext.RemoveFromPlaylistCommand}"
                                                             CommandParameter="{Binding Id}"/>
                                                 </Grid>

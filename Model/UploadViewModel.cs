@@ -16,9 +16,16 @@ public class UploadViewModel : INotifyPropertyChanged
     private readonly IApiService _api;
     private readonly Window _window;
     
-    public ObservableCollection<string> Categories { get; } = new()
+    public ObservableCollection<CategoryOption> Categories { get; } = new()
     {
-        "education", "entertainment", "technology", "music", "sport", "news", "other"
+        new("education", "Образование"),
+        new("entertainment", "Развлечения"),
+        new("technology", "Технологии"),
+        new("music", "Музыка"),
+        new("sport", "Спорт"),
+        new("games", "Игры"),
+        new("news", "Новости"),
+        new("other", "Другое")
     };
     
     private string _title = string.Empty;
@@ -35,8 +42,8 @@ public class UploadViewModel : INotifyPropertyChanged
         set { _description = value; OnPropertyChanged(); }
     }
     
-    private string _selectedCategory = string.Empty;
-    public string SelectedCategory
+    private CategoryOption? _selectedCategory;
+    public CategoryOption? SelectedCategory
     {
         get => _selectedCategory;
         set { _selectedCategory = value; OnPropertyChanged(); OnPropertyChanged(nameof(CanUpload)); }
@@ -58,9 +65,35 @@ public class UploadViewModel : INotifyPropertyChanged
     
     public string SelectedFileName => System.IO.Path.GetFileName(SelectedFilePath);
     public bool HasFile => !string.IsNullOrEmpty(SelectedFilePath);
+
+    private bool _useCustomPreview;
+    public bool UseCustomPreview
+    {
+        get => _useCustomPreview;
+        set
+        {
+            _useCustomPreview = value;
+            if (!_useCustomPreview)
+            {
+                SelectedPreviewPath = string.Empty;
+            }
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(CanUpload));
+        }
+    }
+
+    private string _selectedPreviewPath = string.Empty;
+    public string SelectedPreviewPath
+    {
+        get => _selectedPreviewPath;
+        set { _selectedPreviewPath = value; OnPropertyChanged(); OnPropertyChanged(nameof(HasPreview)); OnPropertyChanged(nameof(SelectedPreviewName)); OnPropertyChanged(nameof(CanUpload)); }
+    }
+
+    public bool HasPreview => !string.IsNullOrWhiteSpace(SelectedPreviewPath);
+    public string SelectedPreviewName => Path.GetFileName(SelectedPreviewPath);
     
     public bool CanUpload => !string.IsNullOrWhiteSpace(Title) && 
-                              !string.IsNullOrWhiteSpace(SelectedCategory) && 
+                              SelectedCategory != null &&
                               HasFile && !IsUploading;
     
     private bool _isUploading;
@@ -87,6 +120,7 @@ public class UploadViewModel : INotifyPropertyChanged
     public bool HasError => !string.IsNullOrEmpty(Error);
     
     public SimpleCommand SelectFileCommand { get; }
+    public SimpleCommand SelectPreviewCommand { get; }
     public SimpleCommand UploadCommand { get; }
     public SimpleCommand CancelCommand { get; }
     
@@ -96,6 +130,7 @@ public class UploadViewModel : INotifyPropertyChanged
         _window = window;
         
         SelectFileCommand = new SimpleCommand(async () => await SelectFile());
+        SelectPreviewCommand = new SimpleCommand(async () => await SelectPreview());
         UploadCommand = new SimpleCommand(async () => await Upload(), () => CanUpload);
         CancelCommand = new SimpleCommand(() => _window.Close());
     }
@@ -135,7 +170,20 @@ public class UploadViewModel : INotifyPropertyChanged
         
         try
         {
-            var success = await _api.UploadVideoAsync(Title, Description, SelectedCategory, tags, SelectedFilePath);
+            if (SelectedCategory == null)
+            {
+                Error = "Выберите категорию";
+                return;
+            }
+
+            var success = await _api.UploadVideoAsync(
+                Title,
+                Description,
+                SelectedCategory.Code,
+                tags,
+                SelectedFilePath,
+                UseCustomPreview ? SelectedPreviewPath : null
+            );
             
             if (success)
             {
@@ -148,11 +196,32 @@ public class UploadViewModel : INotifyPropertyChanged
         }
         catch (Exception ex)
         {
-            Error = $"Ошибка: {ex.Message}";
+            var details = ex.InnerException != null ? $" ({ex.InnerException.Message})" : string.Empty;
+            Error = $"Ошибка: {ex.Message}{details}";
         }
         finally
         {
             IsUploading = false;
+        }
+    }
+
+    private async Task SelectPreview()
+    {
+        var storage = _window.StorageProvider;
+        var files = await storage.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = "Выберите обложку",
+            FileTypeFilter = new[]
+            {
+                new FilePickerFileType("Image Files") { Patterns = new[] { "*.jpg", "*.jpeg" } },
+                new FilePickerFileType("All Files") { Patterns = new[] { "*.*" } }
+            },
+            AllowMultiple = false
+        });
+
+        if (files != null && files.Count > 0)
+        {
+            SelectedPreviewPath = files[0].Path.LocalPath;
         }
     }
     
@@ -162,4 +231,9 @@ public class UploadViewModel : INotifyPropertyChanged
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         UploadCommand.RaiseCanExecuteChanged();
     }
+}
+
+public record CategoryOption(string Code, string Name)
+{
+    public override string ToString() => Name;
 }

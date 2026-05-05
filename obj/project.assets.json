@@ -446,6 +446,36 @@
           }
         }
       },
+      "LibVLCSharp/3.9.1": {
+        "type": "package",
+        "compile": {
+          "lib/net8.0/LibVLCSharp.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0/LibVLCSharp.dll": {
+            "related": ".xml"
+          }
+        }
+      },
+      "LibVLCSharp.Avalonia/3.9.1": {
+        "type": "package",
+        "dependencies": {
+          "Avalonia": "11.0.4",
+          "LibVLCSharp": "3.9.1"
+        },
+        "compile": {
+          "lib/netstandard2.0/LibVLCSharp.Avalonia.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/netstandard2.0/LibVLCSharp.Avalonia.dll": {
+            "related": ".xml"
+          }
+        }
+      },
       "MicroCom.Runtime/0.11.4": {
         "type": "package",
         "compile": {
@@ -1118,6 +1148,73 @@
         "runtimes/win-x86/native/libHarfBuzzSharp.pdb"
       ]
     },
+    "LibVLCSharp/3.9.1": {
+      "sha512": "SNvZz5bIJJ0GAaywmXyskZ+ZO42vomDUWXIo5qDpsG9x2kdQrtOuqRx/KNQDnbxBBStYXQUI7DlhzJwz/3xG6g==",
+      "type": "package",
+      "path": "libvlcsharp/3.9.1",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.md",
+        "icon.png",
+        "lib/monoandroid81/LibVLCSharp.Android.AWindow.dll",
+        "lib/monoandroid81/LibVLCSharp.dll",
+        "lib/monoandroid81/LibVLCSharp.xml",
+        "lib/net40/LibVLCSharp.dll",
+        "lib/net40/LibVLCSharp.xml",
+        "lib/net471/LibVLCSharp.dll",
+        "lib/net471/LibVLCSharp.xml",
+        "lib/net6.0-windows10.0.17763/LibVLCSharp.dll",
+        "lib/net6.0-windows10.0.17763/LibVLCSharp.pri",
+        "lib/net6.0-windows10.0.17763/LibVLCSharp.xml",
+        "lib/net6.0/LibVLCSharp.dll",
+        "lib/net6.0/LibVLCSharp.xml",
+        "lib/net8.0-android34.0/LibVLCSharp.dll",
+        "lib/net8.0-android34.0/LibVLCSharp.xml",
+        "lib/net8.0-ios18.0/LibVLCSharp.dll",
+        "lib/net8.0-ios18.0/LibVLCSharp.xml",
+        "lib/net8.0-macos15.0/LibVLCSharp.dll",
+        "lib/net8.0-macos15.0/LibVLCSharp.xml",
+        "lib/net8.0-tvos18.0/LibVLCSharp.dll",
+        "lib/net8.0-tvos18.0/LibVLCSharp.xml",
+        "lib/net8.0-windows10.0.19041/LibVLCSharp.dll",
+        "lib/net8.0-windows10.0.19041/LibVLCSharp.pri",
+        "lib/net8.0-windows10.0.19041/LibVLCSharp.xml",
+        "lib/net8.0/LibVLCSharp.dll",
+        "lib/net8.0/LibVLCSharp.xml",
+        "lib/netstandard1.1/LibVLCSharp.dll",
+        "lib/netstandard1.1/LibVLCSharp.xml",
+        "lib/netstandard2.0/LibVLCSharp.dll",
+        "lib/netstandard2.0/LibVLCSharp.xml",
+        "lib/netstandard2.1/LibVLCSharp.dll",
+        "lib/netstandard2.1/LibVLCSharp.xml",
+        "lib/uap10.0.18362/LibVLCSharp.dll",
+        "lib/uap10.0.18362/LibVLCSharp.pri",
+        "lib/uap10.0.18362/LibVLCSharp.xml",
+        "lib/uap10.0.18362/LibVLCSharp/LibVLCSharp.xr.xml",
+        "lib/xamarinios10/LibVLCSharp.dll",
+        "lib/xamarinios10/LibVLCSharp.xml",
+        "lib/xamarinmac20/LibVLCSharp.dll",
+        "lib/xamarinmac20/LibVLCSharp.xml",
+        "libvlcsharp.3.9.1.nupkg.sha512",
+        "libvlcsharp.nuspec"
+      ]
+    },
+    "LibVLCSharp.Avalonia/3.9.1": {
+      "sha512": "D5uo9IfPcxZuOkKck7eAvkr8Pve+fjYn5CepTuxWRemfB9HzTUWKLWCHBwELCYZd8r8PUienR/eQrzJQ0sM5zw==",
+      "type": "package",
+      "path": "libvlcsharp.avalonia/3.9.1",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.md",
+        "icon.png",
+        "lib/netstandard2.0/LibVLCSharp.Avalonia.dll",
+        "lib/netstandard2.0/LibVLCSharp.Avalonia.xml",
+        "libvlcsharp.avalonia.3.9.1.nupkg.sha512",
+        "libvlcsharp.avalonia.nuspec"
+      ]
+    },
     "MicroCom.Runtime/0.11.4": {
       "sha512": "yZ8+Lgwo+KtRI29TB2mIOEMzV+csMJ+pKZg4YHReAP3vRewWLKKeYfrBDo5FS69rWnEbCfU3sbM+ZEQr+GDLtg==",
       "type": "package",
@@ -1387,7 +1484,8 @@
       "Avalonia.Desktop >= 12.0.2",
       "Avalonia.Fonts.Inter >= 12.0.2",
       "Avalonia.Skia >= 12.0.2",
-      "Avalonia.Themes.Fluent >= 12.0.2"
+      "Avalonia.Themes.Fluent >= 12.0.2",
+      "LibVLCSharp.Avalonia >= 3.9.1"
     ]
   },
   "packageFolders": {
@@ -1452,6 +1550,10 @@
           "Avalonia.Themes.Fluent": {
             "target": "Package",
             "version": "[12.0.2, )"
+          },
+          "LibVLCSharp.Avalonia": {
+            "target": "Package",
+            "version": "[3.9.1, )"
           }
         },
         "imports": [

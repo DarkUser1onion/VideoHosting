@@ -47,7 +47,10 @@ public class VideoProcessingService : IVideoProcessingService
             if (video != null)
             {
                 video.Duration = duration;
-                video.PreviewPath = previewPath;
+                if (string.IsNullOrWhiteSpace(video.PreviewPath))
+                {
+                    video.PreviewPath = previewPath;
+                }
                 video.Status = "pending"; // Ready for moderation
                 await context.SaveChangesAsync();
             }
@@ -61,7 +64,9 @@ public class VideoProcessingService : IVideoProcessingService
             var video = await context.Videos.FindAsync(videoId);
             if (video != null)
             {
-                video.Status = "error";
+                // Even if processing partially fails, keep the video in moderation queue.
+                // This prevents uploads from "disappearing" for moderators.
+                video.Status = "pending";
                 await context.SaveChangesAsync();
             }
         }

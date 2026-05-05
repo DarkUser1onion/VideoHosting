@@ -4,8 +4,8 @@
         x:Class="VideoHostingByWhoami.Views.ModerationWindow"
         x:DataType="vm:ModerationViewModel"
         x:Name="ModerationWnd"
-        Title="Модерация видео"
-        Width="1000" Height="700"
+        Title="Панель модерации"
+        Width="1100" Height="750"
         WindowStartupLocation="CenterOwner"
         Background="#030712">
 
@@ -32,12 +32,22 @@
         <Style Selector="Button.reject">
             <Setter Property="Background" Value="#EF4444"/>
         </Style>
+        <Style Selector="Button.danger">
+            <Setter Property="Background" Value="#DC2626"/>
+        </Style>
         <Style Selector="TextBlock">
             <Setter Property="Foreground" Value="White"/>
         </Style>
         <Style Selector="Border.card">
             <Setter Property="Background" Value="#1F2937"/>
             <Setter Property="CornerRadius" Value="12"/>
+        </Style>
+        <Style Selector="TabControl">
+            <Setter Property="Background" Value="Transparent"/>
+        </Style>
+        <Style Selector="TabItem">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Padding" Value="16,8"/>
         </Style>
     </Window.Styles>
 
@@ -47,50 +57,90 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         
-        <TextBlock Grid.Row="0" Text="Видео на модерации" FontSize="24" FontWeight="Bold" Margin="0,0,0,20"/>
+        <TextBlock Grid.Row="0" Text="Панель модерации" FontSize="24" FontWeight="Bold" Margin="0,0,0,20"/>
         
-        <ScrollViewer Grid.Row="1">
-            <ItemsControl ItemsSource="{Binding PendingVideos}">
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate DataType="vm:VideoItem">
-                        <Border Classes="card" Margin="0,0,0,16" Padding="16">
-                            <Grid ColumnDefinitions="200,*">
-                                <!-- Preview -->
-                                <Border Grid.Column="0" Background="#374151" CornerRadius="8" Height="120">
-                                    <Image Source="{Binding PreviewUrl}" Stretch="UniformToFill"/>
-                                </Border>
-                                
-                                <!-- Info -->
-                                <Grid Grid.Column="1" RowDefinitions="*,Auto" Margin="16,0,0,0">
-                                    <StackPanel Grid.Row="0">
-                                        <TextBlock Text="{Binding Title}" FontSize="18" FontWeight="SemiBold"/>
-                                        <TextBlock Text="{Binding AuthorName}" Foreground="#9CA3AF" Margin="0,4,0,0"/>
-                                        <TextBlock Text="{Binding Description}" TextWrapping="Wrap" 
-                                                   MaxLines="2" Foreground="#9CA3AF" Margin="0,8,0,0"/>
+        <TabControl Grid.Row="1">
+            <!-- Вкладка модерации видео -->
+            <TabItem Header="Видео на модерации">
+                <ScrollViewer>
+                    <ItemsControl ItemsSource="{Binding PendingVideos}" Margin="0,10,0,0">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="vm:VideoItem">
+                                <Border Classes="card" Margin="0,0,0,16" Padding="16">
+                                    <Grid ColumnDefinitions="200,*">
+                                        <!-- Preview -->
+                                        <Border Grid.Column="0" Background="#374151" CornerRadius="8" Height="120">
+                                            <Image Source="{Binding PreviewImage}" Stretch="UniformToFill"/>
+                                        </Border>
                                         
-                                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                                            <TextBlock Text="Категория:" Foreground="#6B7280" Margin="0,0,8,0"/>
-                                            <TextBlock Text="{Binding Category}"/>
+                                        <!-- Info -->
+                                        <Grid Grid.Column="1" RowDefinitions="*,Auto" Margin="16,0,0,0">
+                                            <StackPanel Grid.Row="0">
+                                                <TextBlock Text="{Binding Title}" FontSize="18" FontWeight="SemiBold"/>
+                                                <TextBlock Text="{Binding AuthorName}" Foreground="#9CA3AF" Margin="0,4,0,0"/>
+                                                <TextBlock Text="{Binding Description}" TextWrapping="Wrap" 
+                                                           MaxLines="2" Foreground="#9CA3AF" Margin="0,8,0,0"/>
+                                                
+                                                <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                                    <TextBlock Text="Категория:" Foreground="#6B7280" Margin="0,0,8,0"/>
+                                                    <TextBlock Text="{Binding CategoryDisplay}"/>
+                                                </StackPanel>
+                                                
+                                                <TextBlock Text="{Binding Status}" Foreground="#F59E0B" Margin="0,4,0,0"/>
+                                            </StackPanel>
+                                            
+                                            <!-- Actions -->
+                                            <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="12" Margin="0,12,0,0">
+                                                <Button Classes="secondary" Content="▶ Смотреть"
+                                                        Command="{Binding $parent[Window].DataContext.PreviewCommand}"
+                                                        CommandParameter="{Binding Id}"/>
+                                                <Button Classes="approve" Content="✓ Одобрить"
+                                                        Command="{Binding $parent[Window].DataContext.ApproveCommand}"
+                                                        CommandParameter="{Binding Id}"/>
+                                                <Button Classes="reject" Content="✕ Отклонить"
+                                                        Command="{Binding $parent[Window].DataContext.RejectCommand}"
+                                                        CommandParameter="{Binding Id}"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </TabItem>
+            
+            <!-- Вкладка управления пользователями -->
+            <TabItem Header="Пользователи">
+                <ScrollViewer>
+                    <ItemsControl ItemsSource="{Binding Users}" Margin="0,10,0,0">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="vm:UserItem">
+                                <Border Classes="card" Margin="0,0,0,8" Padding="16">
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <StackPanel Grid.Column="0">
+                                            <TextBlock Text="{Binding Login}" FontSize="16" FontWeight="SemiBold"/>
+                                            <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                                <TextBlock Text="Роль:" Foreground="#9CA3AF" Margin="0,0,8,0"/>
+                                                <TextBlock Text="{Binding RoleDisplay}"/>
+                                            </StackPanel>
+                                            <TextBlock Text="{Binding CreatedAt, StringFormat='Зарегистрирован: {0:dd.MM.yyyy}'}" 
+                                                       Foreground="#9CA3AF" Margin="0,4,0,0" FontSize="12"/>
                                         </StackPanel>
                                         
-                                        <TextBlock Text="{Binding Status}" Foreground="#F59E0B" Margin="0,4,0,0"/>
-                                    </StackPanel>
-                                    
-                                    <!-- Actions -->
-                                    <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="12" Margin="0,12,0,0">
-                                        <Button Classes="approve" Content="✓ Одобрить"
-                                                Command="{Binding $parent[Window].DataContext.ApproveCommand}"
-                                                CommandParameter="{Binding Id}"/>
-                                        <Button Classes="reject" Content="✕ Отклонить"
-                                                Command="{Binding $parent[Window].DataContext.RejectCommand}"
-                                                CommandParameter="{Binding Id}"/>
-                                    </StackPanel>
-                                </Grid>
-                            </Grid>
-                        </Border>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
-        </ScrollViewer>
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                            <Button Classes="danger" Content="Удалить"
+                                                    Command="{Binding $parent[Window].DataContext.DeleteUserCommand}"
+                                                    CommandParameter="{Binding Id}"
+                                                    IsVisible="{Binding $parent[Window].DataContext.CanDeleteUsers}"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </TabItem>
+        </TabControl>
     </Grid>
 </Window>

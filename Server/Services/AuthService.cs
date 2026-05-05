@@ -10,10 +10,14 @@ namespace Server.Services;
 
 public interface IAuthService
 {
-    Task<(bool Success, string Message, User? User)> RegisterAsync(string login, string password);
+    Task<(bool Success, string Message, User? User)> RegisterAsync(string login, string password, bool registerAsModerator, string? moderatorPassword);
     Task<(bool Success, string? Token, User? User)> LoginAsync(string login, string password);
+    Task<(bool Success, string Message, User? User)> CreateModeratorAsync(string login, string password);
     string GenerateJwtToken(User user);
     ClaimsPrincipal? ValidateToken(string token);
+    Task<List<UserDto>> GetAllUsersAsync(Guid requesterId);
+    Task<bool> DeleteUserAsync(Guid userId, Guid requesterId);
+    Task<bool> ModerateUpdateVideoAsync(Guid videoId, Guid moderatorId, VideoUpdateRequest request);
 }
 
 public class AuthService : IAuthService
@@ -27,7 +31,7 @@ public class AuthService : IAuthService
         _configuration = configuration;
     }
     
-    public async Task<(bool Success, string Message, User? User)> RegisterAsync(string login, string password)
+    public async Task<(bool Success, string Message, User? User)> RegisterAsync(string login, string password, bool registerAsModerator, string? moderatorPassword)
     {
         if (string.IsNullOrWhiteSpace(login) || string.IsNullOrWhiteSpace(password))
             return (false, "Login and password are required", null);
@@ -35,12 +39,19 @@ public class AuthService : IAuthService
         if (await _context.Users.AnyAsync(u => u.Login == login))
             return (false, "User with this login already exists", null);
         
+        if (registerAsModerator)
+        {
+            var configuredPassword = _configuration["Auth:ModeratorRegistrationPassword"] ?? "moderator-secret";
+            if (string.IsNullOrWhiteSpace(moderatorPassword) || moderatorPassword != configuredPassword)
+                return (false, "Неверный пароль модератора", null);
+        }
+
         var user = new User
         {
             Id = Guid.NewGuid(),
             Login = login,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(password),
-            Role = "user",
+            Role = registerAsModerator ? "moderator" : "user",
             CreatedAt = DateTime.UtcNow
         };
         
@@ -59,6 +70,28 @@ public class AuthService : IAuthService
         
         var token = GenerateJwtToken(user);
         return (true, token, user);
+    }
+
+    public async Task<(bool Success, string Message, User? User)> CreateModeratorAsync(string login, string password)
+    {
+        if (string.IsNullOrWhiteSpace(login) || string.IsNullOrWhiteSpace(password))
+            return (false, "Логин и пароль обязательны", null);
+
+        if (await _context.Users.AnyAsync(u => u.Login == login))
+            return (false, "Пользователь с таким логином уже существует", null);
+
+        var user = new User
+        {
+            Id = Guid.NewGuid(),
+            Login = login,
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(password),
+            Role = "moderator",
+            CreatedAt = DateTime.UtcNow
+        };
+
+        _context.Users.Add(user);
+        await _context.SaveChangesAsync();
+        return (true, "Модератор создан", user);
     }
     
     public string GenerateJwtToken(User user)
@@ -110,5 +143,76 @@ public class AuthService : IAuthService
         {
             return null;
         }
+    }
+    
+    public async Task<List<UserDto>> GetAllUsersAsync(Guid requesterId)
+    {
+        var requester = await _context.Users.FindAsync(requesterId);
+        if (requester == null) return new List<UserDto>();
+        
+        var query = _context.Users.AsQueryable();
+        
+        // Админ видит всех кроме себя
+        if (requester.Role == "admin")
+        {
+            query = query.Where(u => u.Id != requesterId);
+        }
+        // Модератор видит только пользователей (не админов и не модераторов)
+        else if (requester.Role == "moderator")
+        {
+            query = query.Where(u => u.Role == "user");
+        }
+        // Обычный пользователь не видит никого
+        else
+        {
+            return new List<UserDto>();
+        }
+        
+        var users = await query
+            .OrderBy(u => u.CreatedAt)
+            .ToListAsync();
+        
+        return users.Select(u => new UserDto(u.Id, u.Login, u.Role, u.CreatedAt)).ToList();
+    }
+    
+    public async Task<bool> DeleteUserAsync(Guid userId, Guid requesterId)
+    {
+        var user = await _context.Users.FindAsync(userId);
+        var requester = await _context.Users.FindAsync(requesterId);
+        
+        if (user == null || requester == null) return false;
+        
+        // Админ может удалить кого угодно (кроме себя)
+        if (requester.Role == "admin" && user.Id != requesterId)
+        {
+            _context.Users.Remove(user);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+        
+        // Модератор может удалить только пользователей (не админов и не модераторов)
+        if (requester.Role == "moderator" && user.Role == "user")
+        {
+            _context.Users.Remove(user);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+        
+        return false;
+    }
+    
+    public async Task<bool> ModerateUpdateVideoAsync(Guid videoId, Guid moderatorId, VideoUpdateRequest request)
+    {
+        var video = await _context.Videos.FindAsync(videoId);
+        if (video == null) return false;
+        
+        // Moderators can edit any video
+        if (request.Title != null) video.Title = request.Title;
+        if (request.Description != null) video.Description = request.Description;
+        if (request.Category != null) video.Category = request.Category;
+        if (request.Tags != null) video.Tags = request.Tags;
+        
+        await _context.SaveChangesAsync();
+        return true;
     }
 }

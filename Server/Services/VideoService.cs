@@ -8,7 +8,8 @@ public interface IVideoService
 {
     Task<List<VideoDto>> GetAllVideosAsync(string? search, string? category);
     Task<VideoDto?> GetVideoByIdAsync(Guid id);
-    Task<VideoUploadResponse> UploadVideoAsync(Guid authorId, VideoCreateRequest request, IFormFile file, string uploadsPath);
+    Task<string?> GetVideoOriginalPathAsync(Guid videoId);
+    Task<VideoUploadResponse> UploadVideoAsync(Guid authorId, VideoCreateRequest request, IFormFile file, IFormFile? previewFile, string uploadsPath);
     Task<bool> UpdateVideoAsync(Guid videoId, Guid userId, VideoUpdateRequest request);
     Task<bool> DeleteVideoAsync(Guid videoId, Guid userId);
     Task IncrementViewsAsync(Guid videoId);
@@ -53,7 +54,7 @@ public class VideoService : IVideoService
             v.Description,
             v.Category,
             v.Tags,
-            $"/api/video/{v.Id}/preview",
+            $"/api/videos/{v.Id}/preview",
             v.Duration,
             v.Views,
             v.Status,
@@ -80,7 +81,7 @@ public class VideoService : IVideoService
             video.Description,
             video.Category,
             video.Tags,
-            $"/api/video/{video.Id}/preview",
+            $"/api/videos/{video.Id}/preview",
             video.Duration,
             video.Views,
             video.Status,
@@ -90,7 +91,7 @@ public class VideoService : IVideoService
         );
     }
     
-    public async Task<VideoUploadResponse> UploadVideoAsync(Guid authorId, VideoCreateRequest request, IFormFile file, string uploadsPath)
+    public async Task<VideoUploadResponse> UploadVideoAsync(Guid authorId, VideoCreateRequest request, IFormFile file, IFormFile? previewFile, string uploadsPath)
     {
         var videoId = Guid.NewGuid();
         var videoFolder = Path.Combine(uploadsPath, videoId.ToString());
@@ -103,6 +104,14 @@ public class VideoService : IVideoService
             await file.CopyToAsync(stream);
         }
         
+        string? customPreviewPath = null;
+        if (previewFile != null && previewFile.Length > 0)
+        {
+            customPreviewPath = Path.Combine(videoFolder, "preview.jpg");
+            using var previewStream = new FileStream(customPreviewPath, FileMode.Create);
+            await previewFile.CopyToAsync(previewStream);
+        }
+
         var video = new Video
         {
             Id = videoId,
@@ -113,7 +122,8 @@ public class VideoService : IVideoService
             Tags = request.Tags,
             FilePath = originalPath,
             Status = "processing",
-            UploadedAt = DateTime.UtcNow
+            UploadedAt = DateTime.UtcNow,
+            PreviewPath = customPreviewPath
         };
         
         _context.Videos.Add(video);
@@ -188,5 +198,22 @@ public class VideoService : IVideoService
         if (!File.Exists(hlsPath)) throw new FileNotFoundException("HLS playlist not found");
         
         return hlsPath;
+    }
+
+    public async Task<string?> GetVideoOriginalPathAsync(Guid videoId)
+    {
+        var video = await _context.Videos.FindAsync(videoId);
+        if (video == null)
+        {
+            return null;
+        }
+
+        if (string.IsNullOrWhiteSpace(video.FilePath))
+        {
+            return null;
+        }
+
+        // Keep raw path from DB; caller resolves relative paths against web content root.
+        return video.FilePath;
     }
 }

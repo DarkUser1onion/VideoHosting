@@ -90,13 +90,13 @@ public class PlaylistVideo
 public class Moderation
 {
     public Guid VideoId { get; set; }
-    public Guid ModeratorId { get; set; }
+    public Guid? ModeratorId { get; set; }  // Nullable - not set until moderation happens
     public string Status { get; set; } = "pending"; // pending, approved, rejected
     public string? Reason { get; set; }
-    public DateTime ModeratedAt { get; set; } = DateTime.UtcNow;
+    public DateTime? ModeratedAt { get; set; }  // Nullable - not set until moderation happens
     
     public Video Video { get; set; } = null!;
-    public User Moderator { get; set; } = null!;
+    public User? Moderator { get; set; }
 }
 
 // Notification entity

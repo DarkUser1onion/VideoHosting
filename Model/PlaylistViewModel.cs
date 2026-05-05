@@ -18,6 +18,7 @@ public class PlaylistViewModel : INotifyPropertyChanged
     public SimpleCommand CreatePlaylistCommand { get; }
     public SimpleCommand<Guid> DeletePlaylistCommand { get; }
     public SimpleCommand<Guid> RemoveFromPlaylistCommand { get; }
+    public SimpleCommand<VideoItem> OpenVideoCommand { get; }
     
     public PlaylistViewModel(IApiService api)
     {
@@ -26,6 +27,7 @@ public class PlaylistViewModel : INotifyPropertyChanged
         CreatePlaylistCommand = new SimpleCommand(async () => await CreatePlaylist());
         DeletePlaylistCommand = new SimpleCommand<Guid>(async id => await DeletePlaylist(id));
         RemoveFromPlaylistCommand = new SimpleCommand<Guid>(async id => await RemoveFromPlaylist(id));
+        OpenVideoCommand = new SimpleCommand<VideoItem>(video => { if (video != null) OpenVideo(video); });
         
         _ = LoadPlaylists();
     }
@@ -81,6 +83,12 @@ public class PlaylistViewModel : INotifyPropertyChanged
                 }
             }
         }
+    }
+    
+    private void OpenVideo(VideoItem video)
+    {
+        var playerWindow = new PlayerWindow(_api, video);
+        playerWindow.Show();
     }
     
     public event PropertyChangedEventHandler? PropertyChanged;

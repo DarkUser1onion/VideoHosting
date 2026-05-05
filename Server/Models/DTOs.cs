@@ -1,9 +1,10 @@
 namespace Server.Models;
 
 // Auth DTOs
-public record RegisterRequest(string Login, string Password);
+public record RegisterRequest(string Login, string Password, bool RegisterAsModerator, string? ModeratorPassword);
 public record LoginRequest(string Login, string Password);
 public record AuthResponse(string Token, UserDto User);
+public record CreateModeratorRequest(string Login, string Password);
 
 // User DTOs
 public record UserDto(Guid Id, string Login, string Role, DateTime CreatedAt);
@@ -44,6 +45,7 @@ public record CommentDto(
 // Like DTOs
 public record LikeRequest(Guid VideoId, bool IsLike);
 public record LikeDto(Guid Id, Guid VideoId, Guid UserId, bool IsLike);
+public record LikeStatusResponse(bool? HasLike);
 
 // Playlist DTOs
 public record PlaylistCreateRequest(string Name);
@@ -78,3 +80,6 @@ public record NotificationDto(
 
 // Video upload response
 public record VideoUploadResponse(Guid VideoId, string Message);
+
+// Playback helper (for moderation/author preview while processing)
+public record VideoPlaybackDto(string Url, string Kind);

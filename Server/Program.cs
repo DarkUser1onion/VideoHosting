@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -9,8 +10,19 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+const long MaxUploadSizeBytes = 2L * 1024 * 1024 * 1024; // 2 GB
+
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Limits.MaxRequestBodySize = MaxUploadSizeBytes;
+});
+
 // Add services
 builder.Services.AddControllers();
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = MaxUploadSizeBytes;
+});
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -144,6 +156,7 @@ app.MapControllers();
 
 // Serve static files (uploaded videos)
 var uploadsPath = builder.Configuration["UploadsPath"] ?? Path.Combine(builder.Environment.ContentRootPath, "uploads");
+uploadsPath = Path.GetFullPath(uploadsPath);
 if (!Directory.Exists(uploadsPath))
 {
     Directory.CreateDirectory(uploadsPath);
