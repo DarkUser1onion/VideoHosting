@@ -92,6 +92,10 @@ public class PlayerViewModel : INotifyPropertyChanged
     public SimpleCommand OpenInVlcCommand { get; }
     public SimpleCommand OpenInBrowserCommand { get; }
     
+    // События для открытия во внешних плеерах
+    public event Action? OpenExternalRequested;
+    public event Action? OpenBrowserRequested;
+    
     private bool _isModeratorOrAdmin = false;
     public bool CanDeleteComments => _isModeratorOrAdmin;
 
@@ -135,9 +139,12 @@ public class PlayerViewModel : INotifyPropertyChanged
         // Сейчас не используется, так как используем mpv
     }
 
+    private bool _videoDeleted = false;
+    
     public async void OnClosed()
     {
-        if (_refreshCallback != null)
+        // Обновляем список только если видео было удалено
+        if (_videoDeleted && _refreshCallback != null)
         {
             try
             {
@@ -160,6 +167,8 @@ public class PlayerViewModel : INotifyPropertyChanged
 
         var deleted = await _api.DeleteVideoAsync(Video.Id);
         if (!deleted) return;
+        
+        _videoDeleted = true;
 
         if (_refreshCallback != null)
             await _refreshCallback();
@@ -260,68 +269,17 @@ public class PlayerViewModel : INotifyPropertyChanged
     
     private void OpenInExternalPlayer()
     {
-        OpenInVlc();
+        OpenExternalRequested?.Invoke();
     }
     
     private void OpenInVlc()
     {
-        try
-        {
-            var streamUrl = StreamUrl;
-            
-            // Пробуем VLC
-            try
-            {
-                using var process = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
-                {
-                    FileName = "vlc",
-                    Arguments = $"\"{streamUrl}\"",
-                    UseShellExecute = false,
-                    CreateNoWindow = false
-                });
-                return;
-            }
-            catch
-            {
-                // Если VLC не установлен, пробуем mpv
-                try
-                {
-                    using var process = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
-                    {
-                        FileName = "mpv",
-                        Arguments = $"\"{streamUrl}\" --title=\"VideoHosting Player\"",
-                        UseShellExecute = false,
-                        CreateNoWindow = false
-                    });
-                    return;
-                }
-                catch
-                {
-                    PlaybackError = "Не установлен VLC или mpv. Установите один из этих плееров.";
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            PlaybackError = $"Ошибка открытия в VLC/mpv: {ex.Message}";
-        }
+        OpenExternalRequested?.Invoke();
     }
     
     private void OpenInBrowser()
     {
-        try
-        {
-            var watchUrl = $"http://localhost:5000/api/videos/{Video.Id}/watch";
-            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
-            {
-                FileName = watchUrl,
-                UseShellExecute = true
-            });
-        }
-        catch (Exception ex)
-        {
-            PlaybackError = $"Не удалось открыть браузер: {ex.Message}";
-        }
+        OpenBrowserRequested?.Invoke();
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;

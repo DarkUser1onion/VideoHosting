@@ -181,12 +181,12 @@ public class VideoService : IVideoService
     
     public async Task IncrementViewsAsync(Guid videoId)
     {
-        var video = await _context.Videos.FindAsync(videoId);
-        if (video != null)
-        {
-            video.Views++;
-            await _context.SaveChangesAsync();
-        }
+        // Атомарное обновление через ExecuteUpdateAsync для избежания конкурентных проблем
+        var updated = await _context.Videos
+            .Where(v => v.Id == videoId)
+            .ExecuteUpdateAsync(s => s.SetProperty(v => v.Views, v => v.Views + 1));
+        
+        // Если видео не найдено (updated == 0), просто игнорируем
     }
     
     public async Task<string> GetVideoStreamPathAsync(Guid videoId)

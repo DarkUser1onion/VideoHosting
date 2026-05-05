@@ -1,11 +1,13 @@
 using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Avalonia.Controls;
 using Avalonia.Media.Imaging;
 using VideoHostingByWhoami.Services;
 using VideoHostingByWhoami.Views;
@@ -17,11 +19,13 @@ public class MainWindowViewModel : INotifyPropertyChanged
     private const string LastAuthFileName = "last-auth.json";
     private readonly IApiService _api;
     private readonly string _authStatePath;
+    private MainWindow? _mainWindow;
     
     // Collections
     public ObservableCollection<VideoItem> Videos { get; } = new();
     public ObservableCollection<Notification> Notifications { get; } = new();
     public ObservableCollection<Playlist> Playlists { get; } = new();
+    public ObservableCollection<Comment> Comments { get; } = new();
     
     // Search & Filter
     private string _searchText = string.Empty;
@@ -131,10 +135,77 @@ public class MainWindowViewModel : INotifyPropertyChanged
         set { _isAuthVisible = value; OnPropertyChanged(); OnPropertyChanged(nameof(IsCatalogVisible)); }
     }
     
-    public bool IsCatalogVisible => !IsAuthVisible;
+    public bool IsCatalogVisible => !IsAuthVisible && !IsPlayerVisible;
 
+    // Player State
+    private bool _isPlayerVisible;
+    public bool IsPlayerVisible
+    {
+        get => _isPlayerVisible;
+        set 
+        { 
+            _isPlayerVisible = value; 
+            OnPropertyChanged(); 
+            OnPropertyChanged(nameof(IsCatalogVisible));
+        }
+    }
 
-    
+    private VideoItem? _currentVideo;
+    public VideoItem? CurrentVideo
+    {
+        get => _currentVideo;
+        set
+        {
+            _currentVideo = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(CanDeleteVideo));
+        }
+    }
+
+    private bool _isPlayerReady;
+    public bool IsPlayerReady
+    {
+        get => _isPlayerReady;
+        set { _isPlayerReady = value; OnPropertyChanged(); }
+    }
+
+    private bool? _userLiked;
+    public bool? UserLiked
+    {
+        get => _userLiked;
+        set
+        {
+            _userLiked = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(IsLikeActive));
+            OnPropertyChanged(nameof(IsDislikeActive));
+        }
+    }
+
+    public bool IsLikeActive => UserLiked == true;
+    public bool IsDislikeActive => UserLiked == false;
+
+    public bool CanDeleteVideo => CurrentVideo != null && (IsModerator || (IsAuthenticated && CurrentVideo.AuthorId == CurrentUser?.Id));
+
+    private string _newComment = string.Empty;
+    public string NewComment
+    {
+        get => _newComment;
+        set { _newComment = value; OnPropertyChanged(); }
+    }
+
+    private bool _isModeratorOrAdmin = false;
+    public bool CanDeleteComments => _isModeratorOrAdmin;
+
+    private string _playerError = string.Empty;
+    public string PlayerError
+    {
+        get => _playerError;
+        set { _playerError = value; OnPropertyChanged(); OnPropertyChanged(nameof(HasPlayerError)); }
+    }
+
+    public bool HasPlayerError => !string.IsNullOrWhiteSpace(PlayerError);
+
     private bool _isLoginMode = true;
     public bool IsLoginMode
     {
@@ -203,6 +274,15 @@ public class MainWindowViewModel : INotifyPropertyChanged
     public SimpleCommand ShowModerationCommand { get; }
     public SimpleCommand ShowAdminPanelCommand { get; }
     public SimpleCommand<string> SelectCategoryCommand { get; }
+    public SimpleCommand ClosePlayerCommand { get; }
+    public SimpleCommand LikeCommand { get; }
+    public SimpleCommand DislikeCommand { get; }
+    public SimpleCommand SendCommentCommand { get; }
+    public SimpleCommand AddToPlaylistCommand { get; }
+    public SimpleCommand OpenInMpvCommand { get; }
+    public SimpleCommand OpenInBrowserCommand { get; }
+    public SimpleCommand DeleteVideoCommand { get; }
+    public SimpleCommand<Guid> DeleteCommentCommand { get; }
     
     public MainWindowViewModel() : this(new ApiService()) { }
     
@@ -223,12 +303,33 @@ public class MainWindowViewModel : INotifyPropertyChanged
         ShowModerationCommand = new SimpleCommand(async () => await ShowModeration());
         ShowAdminPanelCommand = new SimpleCommand(ShowAdminPanel);
         SelectCategoryCommand = new SimpleCommand<string>(cat => SelectedCategory = cat ?? "");
+        ClosePlayerCommand = new SimpleCommand(ClosePlayer);
+        LikeCommand = new SimpleCommand(async () => await SetLike(true));
+        DislikeCommand = new SimpleCommand(async () => await SetLike(false));
+        SendCommentCommand = new SimpleCommand(async () => await SendComment());
+        AddToPlaylistCommand = new SimpleCommand(ShowPlaylistSelector);
+        DeleteVideoCommand = new SimpleCommand(async () => await DeleteVideo());
+        DeleteCommentCommand = new SimpleCommand<Guid>(async id => await DeleteComment(id));
+        OpenInMpvCommand = new SimpleCommand(OpenInMpv);
+        OpenInBrowserCommand = new SimpleCommand(OpenInBrowser);
+        
+        // Check user role
+        if (_api.IsAuthenticated && _api.CurrentUser != null)
+        {
+            var role = _api.CurrentUser.Role;
+            _isModeratorOrAdmin = role == "moderator" || role == "admin";
+        }
         
         // Load token from storage
         LoadSavedAuth();
         
         // Initial load
         _ = LoadVideos();
+    }
+
+    public void SetMainWindow(MainWindow window)
+    {
+        _mainWindow = window;
     }
     
     private void LoadSavedAuth()
@@ -347,6 +448,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
         IsAuthenticated = false;
         CurrentUser = null;
         AuthPassword = "";
+        _isModeratorOrAdmin = false;
     }
     
     private async Task DoAuth()
@@ -377,6 +479,15 @@ public class MainWindowViewModel : INotifyPropertyChanged
             SaveAuthState();
             AuthLogin = "";
             AuthPassword = "";
+            
+            // Update moderator status
+            if (_api.CurrentUser != null)
+            {
+                var role = _api.CurrentUser.Role;
+                _isModeratorOrAdmin = role == "moderator" || role == "admin";
+                OnPropertyChanged(nameof(CanDeleteComments));
+            }
+            
             await LoadVideos();
         }
         else
@@ -384,16 +495,231 @@ public class MainWindowViewModel : INotifyPropertyChanged
             AuthError = result.Message;
         }
     }
-    
-    public void OpenVideo(VideoItem video, Avalonia.Controls.Window? ownerWindow = null)
+
+    public void OpenVideo(VideoItem video, MainWindow? mainWindow = null)
     {
-        var playerWindow = new PlayerWindow(_api, video, IsModerator, LoadVideos);
-        playerWindow.Show();
+        _mainWindow = mainWindow ?? _mainWindow;
+        CurrentVideo = video;
+        IsPlayerVisible = true;
+        IsAuthVisible = false;
+        PlayerError = "";
+        
+        // Reset mpv process
+        _mpvProcess = null;
+        
+        // Load comments and like status
+        _ = LoadPlayerData();
+    }
+
+    private async Task LoadPlayerData()
+    {
+        if (CurrentVideo == null) return;
+
+        // Load updated video info
+        var updatedVideo = await _api.GetVideoAsync(CurrentVideo.Id);
+        if (updatedVideo != null)
+        {
+            CurrentVideo.Likes = updatedVideo.Likes;
+            CurrentVideo.Dislikes = updatedVideo.Dislikes;
+            CurrentVideo.Views = updatedVideo.Views;
+            OnPropertyChanged(nameof(CurrentVideo));
+        }
+
+        // Load comments and like status in parallel
+        await Task.WhenAll(LoadComments(), LoadLikeStatus());
+    }
+
+    private async Task LoadComments()
+    {
+        if (CurrentVideo == null) return;
+        
+        var comments = await _api.GetCommentsAsync(CurrentVideo.Id);
+        Comments.Clear();
+        foreach (var comment in comments)
+            Comments.Add(comment);
+    }
+
+    private async Task LoadLikeStatus()
+    {
+        if (CurrentVideo == null) return;
+        
+        if (_api.IsAuthenticated)
+            UserLiked = await _api.GetLikeStatusAsync(CurrentVideo.Id);
+    }
+
+    public void ClosePlayer()
+    {
+        IsPlayerVisible = false;
+        CurrentVideo = null;
+        Comments.Clear();
+        UserLiked = null;
+        NewComment = "";
+        PlayerError = "";
+        
+        // Refresh video list
+        _ = LoadVideos();
+    }
+
+    private async Task SetLike(bool isLike)
+    {
+        if (CurrentVideo == null) return;
+        
+        PlayerError = "";
+        if (!_api.IsAuthenticated)
+        {
+            PlayerError = "Нужно войти в аккаунт, чтобы ставить лайки";
+            return;
+        }
+
+        var success = await _api.SetLikeAsync(CurrentVideo.Id, isLike);
+        if (success)
+        {
+            UserLiked = await _api.GetLikeStatusAsync(CurrentVideo.Id);
+            var updated = await _api.GetVideoAsync(CurrentVideo.Id);
+            if (updated != null)
+            {
+                CurrentVideo.Likes = updated.Likes;
+                CurrentVideo.Dislikes = updated.Dislikes;
+                CurrentVideo.Views = updated.Views;
+                OnPropertyChanged(nameof(CurrentVideo));
+            }
+        }
+        else
+        {
+            PlayerError = "Не удалось изменить лайк";
+        }
+    }
+
+    private async Task SendComment()
+    {
+        if (CurrentVideo == null || !_api.IsAuthenticated || string.IsNullOrWhiteSpace(NewComment)) return;
+
+        var success = await _api.AddCommentAsync(CurrentVideo.Id, NewComment);
+        if (success)
+        {
+            NewComment = "";
+            await LoadComments();
+        }
+    }
+
+    private async Task DeleteComment(Guid commentId)
+    {
+        if (!_isModeratorOrAdmin) return;
+        
+        var success = await _api.DeleteCommentAsync(commentId);
+        if (success)
+        {
+            await LoadComments();
+        }
+    }
+
+    private void ShowPlaylistSelector()
+    {
+        if (CurrentVideo == null) return;
+        
+        var selector = new PlaylistSelectorWindow(_api, CurrentVideo.Id);
+        selector.Show();
+    }
+
+    private async Task DeleteVideo()
+    {
+        if (CurrentVideo == null || !CanDeleteVideo || _mainWindow == null) return;
+
+        var confirmWindow = new DeleteConfirmWindow();
+        var confirmed = await confirmWindow.ShowConfirmDialog(_mainWindow);
+        if (!confirmed) return;
+
+        var deleted = await _api.DeleteVideoAsync(CurrentVideo.Id);
+        if (!deleted) return;
+
+        ClosePlayer();
+    }
+
+    private Process? _mpvProcess;
+    
+    private bool IsMpvRunning => _mpvProcess != null && !_mpvProcess.HasExited;
+    
+    private void OpenInMpv()
+    {
+        if (CurrentVideo == null) return;
+        
+        // Если mpv уже запущен - ничего не делаем
+        if (IsMpvRunning)
+        {
+            return;
+        }
+        
+        var streamUrl = $"http://localhost:5000/api/videos/{CurrentVideo.Id}/stream";
+        
+        try
+        {
+            // Записываем просмотр при открытии MPV
+            _ = RecordViewAsync();
+            
+            _mpvProcess = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = "mpv",
+                    Arguments = $"--title=\"{CurrentVideo.Title}\" \"{streamUrl}\"",
+                    UseShellExecute = false,
+                    CreateNoWindow = false
+                },
+                EnableRaisingEvents = true
+            };
+            
+            _mpvProcess.Exited += (s, e) =>
+            {
+                // Не обновляем окно при закрытии mpv
+                _mpvProcess = null;
+            };
+            
+            _mpvProcess.Start();
+        }
+        catch
+        {
+            PlayerError = "Не удалось запустить mpv. Убедитесь, что mpv установлен.";
+        }
+    }
+    
+    private async Task RecordViewAsync()
+    {
+        if (CurrentVideo == null) return;
+        
+        try
+        {
+            using var client = new System.Net.Http.HttpClient();
+            await client.PostAsync($"http://localhost:5000/api/videos/{CurrentVideo.Id}/view", null);
+        }
+        catch
+        {
+            // Игнорируем ошибки записи просмотра
+        }
+    }
+    
+    private void OpenInBrowser()
+    {
+        if (CurrentVideo == null) return;
+        
+        var watchUrl = $"http://localhost:5000/api/videos/{CurrentVideo.Id}/watch";
+        
+        try
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = watchUrl,
+                UseShellExecute = true
+            });
+        }
+        catch
+        {
+            PlayerError = "Не удалось открыть браузер.";
+        }
     }
 
     public void Dispose()
     {
-        // Nothing to dispose now
+        // Cleanup if needed
     }
     
     private void ShowUpload()

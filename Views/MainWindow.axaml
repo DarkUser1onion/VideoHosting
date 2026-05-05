@@ -8,7 +8,8 @@
         Width="1200" Height="800"
         MinWidth="800" MinHeight="600"
         WindowStartupLocation="CenterScreen"
-        Background="#030712">
+        Background="#030712"
+        x:Name="ThisWindow">
 
     <Window.Styles>
         <Style Selector="TextBox">
@@ -59,8 +60,8 @@
         <!-- Header -->
         <Border Grid.Row="0" Background="#111827" Padding="20,12">
             <DockPanel>
-                <!-- Logo -->
-                <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="10">
+                <!-- Logo - clickable to return to catalog -->
+                <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="10" Cursor="Hand" PointerPressed="OnLogoClick">
                     <TextBlock Text="▶" FontSize="24" Foreground="#3B82F6" FontWeight="Bold"/>
                     <TextBlock Text="VideoHosting" FontSize="20" FontWeight="Bold" VerticalAlignment="Center"/>
                 </StackPanel>
@@ -68,7 +69,8 @@
                 <!-- Search -->
                 <TextBox DockPanel.Dock="Left" Width="300" Margin="40,0,0,0"
                          PlaceholderText="Поиск видео..."
-                         Text="{Binding SearchText}"/>
+                         Text="{Binding SearchText}"
+                         IsVisible="{Binding IsCatalogVisible}"/>
                 
                 <!-- Right side -->
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="12">
@@ -76,10 +78,7 @@
                     <Button Classes="secondary" Width="40" Height="40" Padding="0"
                             Command="{Binding ShowNotificationsCommand}"
                             IsVisible="{Binding IsAuthenticated}">
-                        <TextBlock Text="🔔" FontSize="18"
-                                   HorizontalAlignment="Center"
-                                   VerticalAlignment="Center"
-                                   TextAlignment="Center"/>
+                        <TextBlock Text="🔔" FontSize="18"/>
                     </Button>
                     
                     <!-- Playlists -->
@@ -116,12 +115,14 @@
                           ItemsSource="{Binding CategoryFilters}"
                           SelectedItem="{Binding SelectedCategoryFilter}"
                           HorizontalAlignment="Left"
-                          VerticalAlignment="Center"/>
+                          VerticalAlignment="Center"
+                          IsVisible="{Binding IsCatalogVisible}"/>
             </DockPanel>
         </Border>
         
         <!-- Main Content -->
         <Grid Grid.Row="1">
+            
             <!-- Video Catalog -->
             <ScrollViewer IsVisible="{Binding IsCatalogVisible}">
                 <StackPanel Margin="20">
@@ -172,8 +173,194 @@
                 </StackPanel>
             </ScrollViewer>
 
+            <!-- Embedded Player View -->
+            <Grid IsVisible="{Binding IsPlayerVisible}" ColumnDefinitions="*,400" Margin="0">
+                <!-- Video Player Section -->
+                <Border Classes="card" Margin="20" Padding="0">
+                    <Grid RowDefinitions="Auto,*,Auto,Auto">
+                        <!-- Video Title -->
+                        <TextBlock Grid.Row="0" Text="{Binding CurrentVideo.Title}" FontSize="20" FontWeight="Bold"
+                                   Margin="16,16,16,0"/>
+                        
+                        <!-- Video Player Placeholder -->
+                        <Border x:Name="PlayerContainer" Grid.Row="1" Background="#111827" Margin="16" CornerRadius="12">
+                            <Grid>
+                                <!-- Video Preview Background -->
+                                <Image Source="{Binding CurrentVideo.PreviewImage}" Stretch="UniformToFill" Opacity="0.3"/>
+                                
+                                <!-- Duration Badge -->
+                                <Border Background="#00000080" CornerRadius="4" 
+                                        VerticalAlignment="Top" HorizontalAlignment="Right"
+                                        Margin="24" Padding="8,4">
+                                    <TextBlock Text="{Binding CurrentVideo.DurationFormatted}" FontSize="14" FontWeight="SemiBold"/>
+                                </Border>
+                                
+                                <!-- Controls Overlay -->
+                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="24">
+                                    <!-- Video icon -->
+                                    <TextBlock Text="▶" FontSize="64" HorizontalAlignment="Center" 
+                                               Foreground="#3B82F6" Opacity="0.9"/>
+                                    
+                                    <TextBlock Text="Выберите способ просмотра" FontSize="18" 
+                                               HorizontalAlignment="Center" Foreground="White" Opacity="0.9"/>
+                                    
+                                    <StackPanel Orientation="Horizontal" Spacing="16" Margin="0,8,0,0">
+                                        <Button Command="{Binding OpenInMpvCommand}" MinWidth="160">
+                                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                                <TextBlock Text="🎬" FontSize="16"/>
+                                                <TextBlock Text="Открыть в MPV"/>
+                                            </StackPanel>
+                                        </Button>
+                                        
+                                        <Button Classes="secondary" Command="{Binding OpenInBrowserCommand}" MinWidth="160">
+                                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                                <TextBlock Text="🌐" FontSize="16"/>
+                                                <TextBlock Text="Открыть в браузере"/>
+                                            </StackPanel>
+                                        </Button>
+                                    </StackPanel>
+                                    
+                                    <TextBlock Text="MPV — лучший вариант для просмотра видео с аппаратным ускорением"
+                                               FontSize="12" Foreground="White" Opacity="0.7" HorizontalAlignment="Center"
+                                               Margin="0,8,0,0"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                        
+                        <!-- Video Actions -->
+                        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="16,0,16,16" Spacing="12">
+                            <Button Command="{Binding LikeCommand}">
+                                <Button.Background>
+                                    <MultiBinding Converter="{StaticResource LikeColorConverter}">
+                                        <Binding Path="IsLikeActive"/>
+                                        <Binding Source="like"/>
+                                    </MultiBinding>
+                                </Button.Background>
+                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                    <TextBlock Text="👍" FontSize="18"/>
+                                    <TextBlock Text="{Binding CurrentVideo.Likes}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                            
+                            <Button Command="{Binding DislikeCommand}">
+                                <Button.Background>
+                                    <MultiBinding Converter="{StaticResource LikeColorConverter}">
+                                        <Binding Path="IsDislikeActive"/>
+                                        <Binding Source="dislike"/>
+                                    </MultiBinding>
+                                </Button.Background>
+                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                    <TextBlock Text="👎" FontSize="18"/>
+                                    <TextBlock Text="{Binding CurrentVideo.Dislikes}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                            
+                            <Button Classes="secondary" Command="{Binding AddToPlaylistCommand}">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <TextBlock Text="➕"/>
+                                    <TextBlock Text="В плейлист"/>
+                                </StackPanel>
+                            </Button>
 
-            
+                            <Button Classes="secondary" Content="Удалить видео"
+                                    Command="{Binding DeleteVideoCommand}"
+                                    IsVisible="{Binding CanDeleteVideo}"/>
+                            
+                            <Button Classes="secondary" Content="← К каталогу"
+                                    Command="{Binding ClosePlayerCommand}"/>
+                        </StackPanel>
+                        
+                        <!-- Video Info -->
+                        <Border Grid.Row="3" Classes="card" Margin="16,0,16,16" Padding="16">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Spacing="16" Margin="0,0,0,12">
+                                    <TextBlock Text="{Binding CurrentVideo.Views}" Foreground="#9CA3AF"/>
+                                    <TextBlock Text="просмотров" Foreground="#9CA3AF"/>
+                                    <TextBlock Text="•" Foreground="#9CA3AF"/>
+                                    <TextBlock Text="{Binding CurrentVideo.UploadedAt, StringFormat='{}{0:dd.MM.yyyy}'}" Foreground="#9CA3AF"/>
+                                </StackPanel>
+                                
+                                <TextBlock Text="Автор:" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                <TextBlock Text="{Binding CurrentVideo.AuthorName}" Foreground="#9CA3AF" Margin="0,0,0,12"/>
+                                
+                                <TextBlock Text="Описание:" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                <TextBlock Text="{Binding CurrentVideo.Description}" TextWrapping="Wrap" Foreground="#D1D5DB"/>
+                                
+                                <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,12,0,0">
+                                    <TextBlock Text="Категория:" Foreground="#9CA3AF"/>
+                                    <TextBlock Text="{Binding CurrentVideo.CategoryDisplay}"/>
+                                </StackPanel>
+                                
+                                <ItemsControl ItemsSource="{Binding CurrentVideo.Tags}" Margin="0,8,0,0">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <WrapPanel/>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Background="#374151" CornerRadius="4" Padding="8,4" Margin="0,0,8,4">
+                                                <TextBlock Text="{Binding}" FontSize="12"/>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </Border>
+                
+                <!-- Comments Section -->
+                <Border Grid.Column="1" Classes="card" Margin="0,20,20,20">
+                    <Grid RowDefinitions="Auto,*">
+                        <TextBlock Grid.Row="0" Text="Комментарии" FontSize="18" FontWeight="Bold"
+                                   Margin="16"/>
+                        
+                        <Grid Grid.Row="1" RowDefinitions="*,Auto">
+                            <!-- Comments List -->
+                            <ScrollViewer Grid.Row="0">
+                                <ItemsControl ItemsSource="{Binding Comments}" Margin="16,0">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate DataType="vm:Comment">
+                                            <Border Background="#111827" CornerRadius="8" Padding="12" Margin="0,0,0,8">
+                                                <Grid ColumnDefinitions="*,Auto">
+                                                    <StackPanel Grid.Column="0">
+                                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                                            <TextBlock Text="{Binding UserName}" FontWeight="SemiBold"/>
+                                                            <TextBlock Text="{Binding TimeAgo}" Foreground="#9CA3AF" FontSize="11"/>
+                                                        </StackPanel>
+                                                        <TextBlock Text="{Binding Content}" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                                                    </StackPanel>
+                                                    <Button Grid.Column="1" 
+                                                            Content="✕" 
+                                                            Padding="8,4" 
+                                                            FontSize="12"
+                                                            Background="Transparent" 
+                                                            Foreground="#9CA3AF"
+                                                            Command="{Binding #ThisWindow.DataContext.DeleteCommentCommand}"
+                                                            CommandParameter="{Binding Id}"
+                                                            IsVisible="{Binding #ThisWindow.DataContext.CanDeleteComments}"/>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                            
+                            <!-- Add Comment -->
+                            <Border Grid.Row="1" Background="#111827" Padding="16" Margin="16">
+                                <StackPanel Spacing="8">
+                                    <TextBox Text="{Binding NewComment}" PlaceholderText="Написать комментарий..."
+                                             AcceptsReturn="True" TextWrapping="Wrap" Height="80"/>
+                                    <Button Content="Отправить" Command="{Binding SendCommentCommand}"
+                                            HorizontalAlignment="Right"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </Grid>
+                </Border>
+            </Grid>
+
             <!-- Auth Panel -->
             <Border Classes="card" Width="400" HorizontalAlignment="Center" VerticalAlignment="Center"
                     Padding="40" IsVisible="{Binding IsAuthVisible}">

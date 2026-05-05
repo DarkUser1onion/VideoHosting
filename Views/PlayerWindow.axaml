@@ -55,23 +55,50 @@
                 <TextBlock Grid.Row="0" Text="{Binding Video.Title}" FontSize="20" FontWeight="Bold"
                            Margin="16,16,16,0"/>
                 
-                <!-- Video Player - NativeControlHost для mpv -->
-                <Border x:Name="PlayerContainer" Grid.Row="1" Background="#000000" Margin="16" CornerRadius="8">
-                    <Panel x:Name="VideoPanel">
-                        <!-- NativeControlHost для встраивания mpv -->
-                    </Panel>
-                </Border>
-                
-                <!-- Loading overlay -->
-                <Panel Grid.Row="1" IsVisible="{Binding !IsPlayerReady}" Margin="16">
-                    <Border Background="#1F2937" CornerRadius="8">
-                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12" Margin="40">
-                            <TextBlock Text="⏳" FontSize="48" HorizontalAlignment="Center"/>
-                            <TextBlock Text="Загрузка плеера..." FontSize="18" HorizontalAlignment="Center"
-                                       Foreground="#9CA3AF"/>
+                <!-- Video Player Placeholder -->
+                <Border x:Name="PlayerContainer" Grid.Row="1" Background="#111827" Margin="16" CornerRadius="12">
+                    <Grid>
+                        <!-- Video Preview Background -->
+                        <Image Source="{Binding Video.PreviewImage}" Stretch="UniformToFill" Opacity="0.3"/>
+                        
+                        <!-- Duration Badge -->
+                        <Border Background="#00000080" CornerRadius="4" 
+                                VerticalAlignment="Top" HorizontalAlignment="Right"
+                                Margin="24" Padding="8,4">
+                            <TextBlock Text="{Binding Video.DurationFormatted}" FontSize="14" FontWeight="SemiBold"/>
+                        </Border>
+                        
+                        <!-- Controls Overlay -->
+                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="24">
+                            <!-- Play icon -->
+                            <TextBlock Text="▶" FontSize="64" HorizontalAlignment="Center" 
+                                       Foreground="#3B82F6" Opacity="0.9"/>
+                            
+                            <TextBlock Text="Выберите способ просмотра" FontSize="18" 
+                                       HorizontalAlignment="Center" Foreground="White" Opacity="0.9"/>
+                            
+                            <StackPanel Orientation="Horizontal" Spacing="16" Margin="0,8,0,0">
+                                <Button Command="{Binding OpenExternalCommand}" MinWidth="160">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <TextBlock Text="🎬" FontSize="16"/>
+                                        <TextBlock Text="Открыть в MPV"/>
+                                    </StackPanel>
+                                </Button>
+                                
+                                <Button Classes="secondary" Command="{Binding OpenInBrowserCommand}" MinWidth="160">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <TextBlock Text="🌐" FontSize="16"/>
+                                        <TextBlock Text="Открыть в браузере"/>
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                            
+                            <TextBlock Text="MPV — лучший вариант для просмотра видео с аппаратным ускорением"
+                                       FontSize="12" Foreground="White" Opacity="0.7" HorizontalAlignment="Center"
+                                       Margin="0,8,0,0"/>
                         </StackPanel>
-                    </Border>
-                </Panel>
+                    </Grid>
+                </Border>
                 
                 <!-- Video Actions -->
                 <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="16,0,16,16" Spacing="12">

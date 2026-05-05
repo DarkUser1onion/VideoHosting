@@ -1,9 +1,6 @@
-using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Platform;
 using System;
 using System.Diagnostics;
-using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using VideoHostingByWhoami.Model;
 using VideoHostingByWhoami.Services;
@@ -14,7 +11,6 @@ public partial class PlayerWindow : Window
 {
     private PlayerViewModel? _viewModel;
     private Process? _mpvProcess;
-    private IntPtr _windowHandle;
     
     public PlayerWindow()
     {
@@ -27,79 +23,72 @@ public partial class PlayerWindow : Window
         _viewModel = new PlayerViewModel(api, video, this, canDeleteVideo, refreshCallback);
         DataContext = _viewModel;
         
-        // Инициализируем плеер после открытия окна
-        Opened += OnWindowOpened;
-    }
-
-    private void OnWindowOpened(object? sender, EventArgs e)
-    {
-        if (_viewModel == null) return;
-        
-        // Получаем handle окна для встраивания mpv
-        var platformHandle = TryGetPlatformHandle();
-        if (platformHandle != null)
-        {
-            _windowHandle = platformHandle.Handle;
-            StartMpvPlayer();
-        }
+        // Подписываемся на команды открытия в mpv/browser из ViewModel
+        _viewModel.OpenExternalRequested += OnOpenExternalRequested;
+        _viewModel.OpenBrowserRequested += OnOpenBrowserRequested;
     }
     
-    private void StartMpvPlayer()
+    private bool IsMpvRunning => _mpvProcess != null && !_mpvProcess.HasExited;
+    
+    private void OnOpenExternalRequested()
     {
-        if (_viewModel == null) return;
+        if (_viewModel == null || IsMpvRunning) return;
         
         var streamUrl = $"http://localhost:5000/api/videos/{_viewModel.Video.Id}/stream";
         
         try
         {
-            // На Linux используем X11 window ID для встраивания mpv
-            var psi = new ProcessStartInfo
+            // Записываем просмотр при открытии MPV
+            _ = RecordViewAsync(_viewModel.Video.Id);
+            
+            _mpvProcess = Process.Start(new ProcessStartInfo
             {
                 FileName = "mpv",
-                Arguments = $"--wid={_windowHandle} " +
-                           $"--no-border " +
-                           $"--keepaspect=yes " +
-                           $"--autofit=100% " +
-                           $"--input-ipc-server=/tmp/mpv-{Guid.NewGuid():N}.sock " +
-                           $"\"{streamUrl}\"",
+                Arguments = $"--title=\"{_viewModel.Video.Title}\" \"{streamUrl}\"",
                 UseShellExecute = false,
-                CreateNoWindow = true,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true
-            };
-            
-            _mpvProcess = Process.Start(psi);
+                CreateNoWindow = false
+            });
             
             if (_mpvProcess != null)
             {
-                _viewModel.IsPlayerReady = true;
-                
-                // Обрабатываем завершение процесса
                 _mpvProcess.Exited += (s, e) =>
                 {
-                    Avalonia.Threading.Dispatcher.UIThread.Post(() =>
-                    {
-                        _viewModel.IsPlayerReady = false;
-                    });
+                    _mpvProcess = null;
                 };
                 _mpvProcess.EnableRaisingEvents = true;
             }
         }
-        catch (Exception ex)
+        catch
         {
-            Console.WriteLine($"Failed to start mpv: {ex.Message}");
             // Fallback - открываем в браузере
-            OpenInBrowser(streamUrl);
+            OnOpenBrowserRequested();
         }
     }
     
-    private void OpenInBrowser(string url)
+    private static async Task RecordViewAsync(Guid videoId)
     {
+        try
+        {
+            using var client = new System.Net.Http.HttpClient();
+            await client.PostAsync($"http://localhost:5000/api/videos/{videoId}/view", null);
+        }
+        catch
+        {
+            // Игнорируем ошибки записи просмотра
+        }
+    }
+    
+    private void OnOpenBrowserRequested()
+    {
+        if (_viewModel == null) return;
+        
+        var watchUrl = $"http://localhost:5000/api/videos/{_viewModel.Video.Id}/watch";
+        
         try
         {
             Process.Start(new ProcessStartInfo
             {
-                FileName = url,
+                FileName = watchUrl,
                 UseShellExecute = true
             });
         }
@@ -113,6 +102,7 @@ public partial class PlayerWindow : Window
         {
             _mpvProcess.Kill();
             _mpvProcess.Dispose();
+            _mpvProcess = null;
         }
         
         _viewModel?.OnClosed();

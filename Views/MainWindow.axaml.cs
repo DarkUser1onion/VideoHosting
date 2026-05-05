@@ -1,6 +1,8 @@
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using System;
+using System.Threading.Tasks;
 using VideoHostingByWhoami.Model;
 using VideoHostingByWhoami.Views;
 
@@ -30,6 +32,14 @@ public partial class MainWindow : Window
         {
             var vm = DataContext as MainWindowViewModel;
             vm?.OpenVideo(video, this);
+        }
+    }
+
+    private void OnLogoClick(object? sender, PointerPressedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel vm)
+        {
+            vm.ClosePlayer();
         }
     }
 
